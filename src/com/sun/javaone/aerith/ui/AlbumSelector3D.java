@@ -35,10 +35,11 @@ import java.util.List;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import com.aetrion.flickr.photosets.Photoset;
+import com.flickr4java.flickr.photosets.Photoset;
 import com.sun.javaone.aerith.g2d.GraphicsUtil;
 import com.sun.javaone.aerith.g2d.Reflection;
 import com.sun.javaone.aerith.math.GaussianEquation;
+
 import org.jdesktop.fuse.InjectedResource;
 import org.jdesktop.fuse.ResourceInjector;
 

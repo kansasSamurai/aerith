@@ -5,10 +5,11 @@ import java.util.concurrent.ExecutionException;
 import javax.swing.Box;
 import javax.swing.JPanel;
 
-import com.aetrion.flickr.people.User;
-import com.aetrion.flickr.photosets.Photoset;
+import com.flickr4java.flickr.people.User;
+import com.flickr4java.flickr.photosets.Photoset;
 import com.sun.javaone.aerith.model.FlickrService;
 import com.sun.javaone.aerith.util.Bundles;
+
 import org.jdesktop.fuse.ResourceInjector;
 import org.jdesktop.swingx.util.SwingWorker;
 
@@ -40,7 +41,8 @@ class AlbumsPanel extends JPanel {
     }
 
     private class AlbumsFetcher extends SwingWorker<Photoset[], Object> {
-        private User contact;
+
+        private final User contact;
 
         AlbumsFetcher(User contact) {
             this.contact = contact;

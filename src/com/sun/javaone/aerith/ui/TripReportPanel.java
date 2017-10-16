@@ -23,19 +23,24 @@ import javax.swing.Box;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 
-import com.aetrion.flickr.photos.Photo;
+import com.flickr4java.flickr.photos.Photo;
+import com.flickr4java.flickr.photos.PhotoList;
+import com.flickr4java.flickr.photosets.PhotosetsInterface;
 import com.sun.javaone.aerith.g2d.GraphicsUtil;
 import com.sun.javaone.aerith.model.FlickrService;
-import org.jdesktop.swingx.mapviewer.LocalResponseCache;
 import com.sun.javaone.aerith.model.Trip;
 import com.sun.javaone.aerith.util.FileUtils;
 import org.jdesktop.fuse.InjectedResource;
 import org.jdesktop.fuse.ResourceInjector;
+import org.jdesktop.swingx.mapviewer.LocalResponseCache;
 
 class TripReportPanel extends JPanel {
+
     private Trip trip;
+
     private TripEditPanel editPanel;
-    ////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////
     // THEME SPECIFIC FIELDS
     ////////////////////////////////////////////////////////////////////////////
     /** @noinspection UNUSED_SYMBOL*/
@@ -102,8 +107,8 @@ class TripReportPanel extends JPanel {
         ///////////////END OF TESTING
 
                     try {
-                        com.aetrion.flickr.photosets.PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
-                        com.aetrion.flickr.photos.PhotoList photos = photosetsInterface.getPhotos("72057594067354711",10,1);
+                        final PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
+                        final PhotoList photos = photosetsInterface.getPhotos("72057594067354711",10,1);
                         for (Object obj : photos) {
                             Photo photo = (Photo)obj;
                             PhotoWrapper wrap = new PhotoWrapper(photo);

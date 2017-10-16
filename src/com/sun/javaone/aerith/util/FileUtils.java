@@ -27,11 +27,11 @@ import com.sun.javaone.aerith.model.Trip;
  * @author rb156199
  */
 public class FileUtils {
-    
+
     /** Creates a new instance of FileUtils */
     private FileUtils() {
     }
-    
+
     public static void copyFile(File oldFile, File newFile) throws Exception {
         newFile.getParentFile().mkdirs();
         newFile.createNewFile(); //if necessary, creates the target file
@@ -41,7 +41,7 @@ public class FileUtils {
         srcChannel.close();
         dstChannel.close();
     }
-    
+
     public static void saveTrip(File saveDir, Trip t) throws Exception {
         saveDir.mkdirs();
         File tripData = new File(saveDir.getAbsolutePath() + "/trip-data.xml");
@@ -50,7 +50,7 @@ public class FileUtils {
         out.write(DataManager.serializeTrip(t).toString().getBytes());
         out.close();
     }
-    
+
     public static Trip readTrip(File readDir) throws Exception {
         InputStream in = new FileInputStream(readDir.getAbsolutePath() + "/trip-data.xml");
         StringBuilder buffer = new StringBuilder();
@@ -62,7 +62,7 @@ public class FileUtils {
         in.close();
         return DataManager.deserializeTrip(buffer.toString());
     }
-    
+
     public static Trip readTrip(URL urlDir) throws Exception {
         URL url = new URL(urlDir.toExternalForm() + "/trip-data.xml");
         InputStream in = url.openStream();
@@ -75,7 +75,7 @@ public class FileUtils {
         in.close();
         return DataManager.deserializeTrip(buffer.toString());
     }
-    
+
     public static URI deployApplet(File deployDir, Map<String,String> variables, Trip t) throws Exception {
         //do the preview -- deploy to local directory
         InputStream in = FileUtils.class.getResourceAsStream("/resources/trip-report-template.html");
@@ -98,7 +98,7 @@ public class FileUtils {
 
         //save the trip data
         saveTrip(deployDir, t);
-        
+
         //save the html to disk
         File page = new File(deployPath + "/trip-report.html");
         page.createNewFile();
@@ -107,20 +107,21 @@ public class FileUtils {
         out.write(html.getBytes());
         out.close();
 
-        copyFile(new File("dist/lib/flickrapi-1.0a9.jar"), new File(deployPath + "/flickrapi-1.0a9.jar"));
-        copyFile(new File("dist/lib/twinkle.jar"), new File(deployPath + "/twinkle.jar"));
+// [1]  copyFile(new File("dist/lib/flickrapi-1.0a9.jar"), new File(deployPath + "/flickrapi-1.0a9.jar"));
+        copyFile(new File("dist/lib/flickr4java-2.13-SNAPSHOT.jar"), new File(deployPath + "/flickrapi-1.0a9.jar"));
+// [1]  copyFile(new File("dist/lib/twinkle.jar"), new File(deployPath + "/twinkle.jar"));
         copyFile(new File("dist/lib/swingx-jxpanel-0.8.jar"), new File(deployPath + "/swingx-jxpanel-0.8.jar"));
         copyFile(new File("dist/lib/vecmath.jar"), new File(deployPath + "/vecmath.jar"));
-        copyFile(new File("dist/lib/TimingFramework.jar"), new File(deployPath + "/TimingFramework.jar"));
+        copyFile(new File("dist/lib/TimingFramework-1.0.jar"), new File(deployPath + "/TimingFramework.jar"));
         copyFile(new File("dist/lib/jl1.0.jar"), new File(deployPath + "/jl1.0.jar"));
         copyFile(new File("dist/Aerith.jar"), new File(deployPath + "/Aerith.jar"));
-        copyFile(new File("dist/resources/corner1.png"), new File(deployPath + "/corner1.png"));
-        copyFile(new File("dist/resources/corner2.png"), new File(deployPath + "/corner2.png"));
-        copyFile(new File("dist/resources/wood.jpg"), new File(deployPath + "/wood.jpg"));
-        copyFile(new File("dist/music/theme.mp3"), new File(deployPath + "/music/theme.mp3"));
-        copyFile(new File("dist/saved-trips/trip-data.xml"), new File(deployPath + "/saved-trips/trip-data.xml"));
-        copyFile(new File("dist/indy-map.jpg"), new File(deployPath + "/indy-map.jpg"));
-        
+// [1]  copyFile(new File("dist/resources/corner1.png"), new File(deployPath + "/corner1.png"));
+// [1]  copyFile(new File("dist/resources/corner2.png"), new File(deployPath + "/corner2.png"));
+// [1]  copyFile(new File("dist/resources/wood.jpg"), new File(deployPath + "/wood.jpg"));
+// [1]  copyFile(new File("dist/music/theme.mp3"), new File(deployPath + "/music/theme.mp3"));
+// [1]  copyFile(new File("dist/saved-trips/trip-data.xml"), new File(deployPath + "/saved-trips/trip-data.xml"));
+// [1]  copyFile(new File("dist/indy-map.jpg"), new File(deployPath + "/indy-map.jpg"));
+
         return page.toURI();
     }
 }

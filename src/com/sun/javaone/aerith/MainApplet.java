@@ -24,7 +24,7 @@ import javax.swing.JApplet;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
-import com.aetrion.flickr.photosets.PhotosetsInterface;
+import com.flickr4java.flickr.photosets.PhotosetsInterface;
 import com.sun.javaone.aerith.model.FlickrService;
 import com.sun.javaone.aerith.model.Trip;
 import com.sun.javaone.aerith.model.Trip.Waypoint;

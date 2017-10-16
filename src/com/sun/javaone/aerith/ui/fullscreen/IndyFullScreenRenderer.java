@@ -1,5 +1,7 @@
 package com.sun.javaone.aerith.ui.fullscreen;
 
+import com.flickr4java.flickr.photos.Photo;
+
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -39,7 +41,6 @@ import org.jdesktop.animation.timing.interpolation.PropertySetter;
 import org.jdesktop.animation.timing.interpolation.SplineInterpolator;
 import org.jdesktop.swingx.JXMapViewer;
 
-import com.aetrion.flickr.photos.Photo;
 import com.sun.javaone.aerith.g2d.GraphicsUtil;
 import com.sun.javaone.aerith.model.Trip;
 import com.sun.javaone.aerith.ui.PhotoWrapper;
@@ -341,7 +342,7 @@ public class IndyFullScreenRenderer implements FullScreenRenderer {
 				photos = new ArrayList<BufferedImage>(photosCount);
 				for (Trip.Waypoint wp : t.getWaypoints()) {
 					for (PhotoWrapper wrapper : wp.getPhotos()) {
-						Photo photo = wrapper.getFlickrPhoto();
+						final Photo photo = wrapper.getFlickrPhoto();
 						try {
 							photos.add(GraphicsUtil
 									.loadCompatibleImage(new URL(

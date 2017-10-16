@@ -17,9 +17,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.aetrion.flickr.FlickrException;
-import com.aetrion.flickr.people.PeopleInterface;
-import com.aetrion.flickr.people.User;
+import com.flickr4java.flickr.FlickrException;
+import com.flickr4java.flickr.people.User;
+import com.flickr4java.flickr.people.PeopleInterface;
 import com.sun.javaone.aerith.model.flickr.Catalog;
 import com.sun.javaone.aerith.ui.PhotoWrapper;
 import org.jdesktop.swingx.mapviewer.GeoPosition;
@@ -51,7 +51,7 @@ public class DataManager {
             List<User> users = new ArrayList<>(6);
             Collections.shuffle(users);
 
-        } catch (IOException | SAXException | FlickrException e) {
+        } catch (FlickrException e) {
             e.printStackTrace();
         }
 

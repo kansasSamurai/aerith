@@ -15,8 +15,11 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.aetrion.flickr.photos.Photo;
+import com.flickr4java.flickr.photos.Photo;
+import com.flickr4java.flickr.photos.PhotoList;
+import com.flickr4java.flickr.photosets.PhotosetsInterface;
 import com.sun.javaone.aerith.ui.PhotoWrapper;
+
 import org.jdesktop.swingx.JavaBean;
 import org.jdesktop.swingx.mapviewer.DefaultWaypoint;
 import org.jdesktop.swingx.mapviewer.GeoPosition;
@@ -267,8 +270,8 @@ public class Trip extends JavaBean {
             w2.setTitle("Ye Olde Grand Canyon");
             t.addWaypoint(w2);
 
-            com.aetrion.flickr.photosets.PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
-            com.aetrion.flickr.photos.PhotoList photos = photosetsInterface.getPhotos("72057594078268040",10,1);
+            PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
+            PhotoList photos = photosetsInterface.getPhotos("72057594078268040",10,1);
             int index = 0;
             for (Object obj : photos) {
                 (index % 2 == 0 ? w1 : w2).addPhoto(new PhotoWrapper((Photo)obj));

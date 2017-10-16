@@ -62,8 +62,8 @@ import org.jdesktop.fuse.ResourceInjector;
 import org.jdesktop.swingx.JXPanel;
 import org.jdesktop.swingx.util.SwingWorker;
 
-import com.aetrion.flickr.people.User;
-import com.aetrion.flickr.photosets.Photoset;
+import com.flickr4java.flickr.people.User;
+import com.flickr4java.flickr.photosets.Photoset;
 import com.sun.javaone.aerith.g2d.GraphicsUtil;
 import com.sun.javaone.aerith.g2d.ShadowFactory;
 import com.sun.javaone.aerith.util.Bundles;
@@ -451,7 +451,7 @@ public class AlbumSelector extends JPanel {
         private void startFadeOut(final Runnable action) {
             if (timer != null && timer.isRunning()) {
                 timer.stop();
-            }            
+            }
             timer = PropertySetter.createAnimator(400,head,"alpha",1.0f, 0.01f);
             timer.addTarget(new TimingTarget() {
                 public void end() {
@@ -465,7 +465,7 @@ public class AlbumSelector extends JPanel {
                 public void timingEvent(float arg2) {
                 }
                 public void repeat() {
-                	
+
                 }
             });
             timer.setAcceleration(0.7f);

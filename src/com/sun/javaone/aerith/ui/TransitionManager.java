@@ -9,11 +9,11 @@ import java.util.concurrent.Executors;
 import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
 
-import com.aetrion.flickr.people.User;
-import com.aetrion.flickr.photos.Photo;
-import com.aetrion.flickr.photos.PhotoList;
-import com.aetrion.flickr.photosets.Photoset;
-import com.aetrion.flickr.photosets.PhotosetsInterface;
+import com.flickr4java.flickr.people.User;
+import com.flickr4java.flickr.photos.Photo;
+import com.flickr4java.flickr.photos.PhotoList;
+import com.flickr4java.flickr.photosets.PhotosetsInterface;
+import com.flickr4java.flickr.photosets.Photoset;
 import com.sun.javaone.aerith.g2d.LinearGradientTypeLoader;
 import com.sun.javaone.aerith.model.DataManager;
 import com.sun.javaone.aerith.model.DataType;

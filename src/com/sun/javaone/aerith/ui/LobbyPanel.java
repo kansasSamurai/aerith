@@ -40,8 +40,8 @@ import org.jdesktop.fuse.InjectedResource;
 import org.jdesktop.fuse.ResourceInjector;
 import org.jdesktop.swingx.util.SwingWorker;
 
-import com.aetrion.flickr.people.User;
-import com.aetrion.flickr.photosets.Photoset;
+import com.flickr4java.flickr.photosets.Photoset;
+import com.flickr4java.flickr.people.User;
 import com.sun.javaone.aerith.g2d.Reflection;
 import com.sun.javaone.aerith.model.Trip;
 import com.sun.javaone.aerith.util.Bundles;
@@ -445,13 +445,13 @@ class LobbyPanel extends JPanel {
                 ghostValue = 0.0f;
                 repaint();
             }
-            public void repeat() {            	
+            public void repeat() {
             }
         }
 
         private final class HiglightHandler extends MouseMotionAdapter implements MouseListener {
             private Animator timer;
-            
+
             @Override
             public void mouseMoved(MouseEvent e) {
                 if (clickable.contains(e.getPoint())) {
@@ -499,9 +499,9 @@ class LobbyPanel extends JPanel {
                 oldValue = newFraction;
             }
 
-            public void repeat() {            	
+            public void repeat() {
             }
-            
+
             public void timingEvent(float fraction) {
                 newFraction = oldValue + fraction * (forward ? 1.0f : -1.0f);
 
@@ -528,9 +528,8 @@ class LobbyPanel extends JPanel {
 
     private class ShowAlbumHandler implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            Photoset selectedAlbum = albumSelector.getSelectedAlbum();
-            TransitionManager.showSlideshow(selectedAlbum.getOwner(),
-                                            selectedAlbum);
+            final Photoset selectedAlbum = albumSelector.getSelectedAlbum();
+            TransitionManager.showSlideshow(selectedAlbum.getOwner(), selectedAlbum);
         }
     }
     private static class ShowTripReportHandler implements ActionListener {

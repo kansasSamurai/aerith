@@ -6,11 +6,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.aetrion.flickr.FlickrException;
-import com.aetrion.flickr.people.PeopleInterface;
-import com.aetrion.flickr.people.User;
-import com.aetrion.flickr.photosets.Photoset;
-import com.aetrion.flickr.photosets.PhotosetsInterface;
+import com.flickr4java.flickr.FlickrException;
+import com.flickr4java.flickr.photosets.Photoset;
+import com.flickr4java.flickr.photosets.PhotosetsInterface;
+import com.flickr4java.flickr.people.PeopleInterface;
+import com.flickr4java.flickr.people.User;
 import com.sun.javaone.aerith.model.FlickrService;
 import org.xml.sax.SAXException;
 
@@ -47,16 +47,16 @@ public class Catalog {
             Collections.shuffle(shuffledSets);
             int i = 0;
             for (Photoset set : shuffledSets) {
-                Photoset info = photosetsInterface.getInfo(set.getId());
-                PeopleInterface peopleInterface = FlickrService.getPeopleInterface();
-                User owner = peopleInterface.getInfo(info.getOwner().getId());
+                final Photoset info = photosetsInterface.getInfo(set.getId());
+                final PeopleInterface peopleInterface = FlickrService.getPeopleInterface();
+                final User owner = peopleInterface.getInfo(info.getOwner().getId());
                 set.setOwner(owner);
                 randomPicks[i++] = set;
                 if (i >= randomPicks.length) {
                     break;
                 }
             }
-          } catch (IOException | SAXException | FlickrException e) {
+          } catch (FlickrException e) {
           }
     }
 

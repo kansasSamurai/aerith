@@ -4,23 +4,25 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
-import javax.imageio.ImageIO;
-
-import com.aetrion.flickr.Flickr;
-import com.aetrion.flickr.FlickrException;
-import com.aetrion.flickr.contacts.ContactsInterface;
-import com.aetrion.flickr.favorites.FavoritesInterface;
-import com.aetrion.flickr.people.PeopleInterface;
-import com.aetrion.flickr.people.User;
-import com.aetrion.flickr.photos.PhotoList;
-import com.aetrion.flickr.photos.PhotosInterface;
-import com.aetrion.flickr.photosets.Photoset;
-import com.aetrion.flickr.photosets.PhotosetsInterface;
-import com.aetrion.flickr.tags.TagsInterface;
-import com.aetrion.flickr.test.TestInterface;
 import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+
+import com.flickr4java.flickr.Flickr;
+import com.flickr4java.flickr.FlickrException;
+import com.flickr4java.flickr.Transport;
+import com.flickr4java.flickr.REST;
+import com.flickr4java.flickr.contacts.ContactsInterface;
+import com.flickr4java.flickr.favorites.FavoritesInterface;
+import com.flickr4java.flickr.people.PeopleInterface;
+import com.flickr4java.flickr.people.User;
+import com.flickr4java.flickr.photos.PhotosInterface;
+import com.flickr4java.flickr.photosets.Photoset;
+import com.flickr4java.flickr.photosets.PhotosetsInterface;
+import com.flickr4java.flickr.tags.TagsInterface;
+import com.flickr4java.flickr.test.TestInterface;
+
 import org.xml.sax.SAXException;
 
 /**
@@ -42,13 +44,16 @@ public class FlickrService {
      */
     private synchronized static Flickr getFlickr() {
         if (flickr == null) {
-            Flickr.tracing = false;
-            flickr = new Flickr("b5c9fb7ef8f08b9c8ae7c72a606b7d1d"); //("af1e08e71047433b04fe4bcf4397c0b6");
+            //Flickr.tracing = false;
+            //flickr = new Flickr("b5c9fb7ef8f08b9c8ae7c72a606b7d1d"); //("af1e08e71047433b04fe4bcf4397c0b6");
+            final Transport t = new REST();
+            flickr = new Flickr("b5c9fb7ef8f08b9c8ae7c72a606b7d1d", "991e942c7474bf75", t);
 
-            TestInterface testInterface = flickr.getTestInterface();
+            final TestInterface testInterface = flickr.getTestInterface();
             try {
-                Collection results = testInterface.echo(Collections.EMPTY_LIST);
-            } catch (IOException | SAXException | FlickrException ex) {
+                // Collection results = testInterface.echo(Collections.EMPTY_LIST);
+                Collection results = testInterface.echo(Collections.EMPTY_MAP);
+            } catch (FlickrException ex) {
                 Logger.getLogger(FlickrService.class.getName()).log(Level.SEVERE, null, ex);
                 ex.printStackTrace();
             }
@@ -87,7 +92,7 @@ public class FlickrService {
         PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
         try {
             return ((Collection<Photoset>) photosetsInterface.getList(user.getId()).getPhotosets()).toArray(new Photoset[0]);
-        } catch (IOException | SAXException | FlickrException e) {
+        } catch (FlickrException e) {
             e.printStackTrace();
         }
 
