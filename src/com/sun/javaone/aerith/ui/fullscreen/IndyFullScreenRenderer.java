@@ -31,7 +31,6 @@ import javazoom.jl.decoder.JavaLayerException;
 
 import org.jdesktop.animation.timing.Animator;
 import org.jdesktop.animation.timing.TimingTarget;
-import org.jdesktop.animation.timing.Animator.EndBehavior;
 import org.jdesktop.animation.timing.Animator.RepeatBehavior;
 import org.jdesktop.animation.timing.interpolation.KeyFrames;
 import org.jdesktop.animation.timing.interpolation.KeyTimes;
@@ -46,7 +45,6 @@ import com.sun.javaone.aerith.model.Trip;
 import com.sun.javaone.aerith.ui.PhotoWrapper;
 import com.sun.javaone.aerith.ui.music.MusicPlayer;
 import com.sun.javaone.aerith.util.FileUtils;
-import com.sun.xml.internal.messaging.saaj.soap.Envelope;
 
 public class IndyFullScreenRenderer implements FullScreenRenderer {
 	private final BufferedImage image;
@@ -554,7 +552,7 @@ public class IndyFullScreenRenderer implements FullScreenRenderer {
 		KeyValues vals = KeyValues.create(0.25f, 1.0f);
 		KeyTimes times = new KeyTimes(0.0f, 1.0f);
 		KeyFrames frames = new KeyFrames(vals, times);
-		
+
 		Animator timer = PropertySetter.createAnimator(2000, this, "zoomLevel",
 				frames);
 		timer.setResolution(12);

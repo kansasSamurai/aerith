@@ -26,53 +26,54 @@ import org.jdesktop.swingx.mapviewer.GeoPosition;
 import org.xml.sax.SAXException;
 
 public class DataManager {
+
     @SuppressWarnings("unchecked")
     public static Catalog get(String userName) {
-        Catalog catalog = new Catalog();
-        
+
+        final Catalog catalog = new Catalog();
         try {
             PeopleInterface peopleInterface = FlickrService.getPeopleInterface();
 //            ContactsInterface contactsInterface = FlickrService.getContactsInterface();
 
-            List<User> users = new ArrayList<User>(6);
             User mainUser = peopleInterface.findByUsername(userName);
             mainUser = peopleInterface.getInfo(mainUser.getId());
-            
+            catalog.addUsers(mainUser);
+//            catalog.addUsers(users.subList(0, users.size() < 5 ? users.size() : 5).toArray(new User[0]));
+            catalog.prefetch();
+
 //            Collection<Contact> contacts = contactsInterface.getPublicList(mainUser.getId());
 //            for (Contact contact : contacts) {
 //                User user = peopleInterface.getInfo(contact.getId());
 //                users.add(user);
 //            }
-            
+
+            // It appears that this list is not used? rlw
+            List<User> users = new ArrayList<>(6);
             Collections.shuffle(users);
-            catalog.addUsers(mainUser);
-//            catalog.addUsers(users.subList(0, users.size() < 5 ? users.size() : 5).toArray(new User[0]));
-            catalog.prefetch();
-            
-        } catch (IOException e) {
-        } catch (SAXException e) {
-        } catch (FlickrException e) {
+
+        } catch (IOException | SAXException | FlickrException e) {
+            e.printStackTrace();
         }
 
         return catalog;
     }
-    
+
     public static String serializeTrip(Trip t) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         XMLEncoder encoder = new XMLEncoder(baos);
         encoder.setPersistenceDelegate(GeneralPath.class, new GeneralPathDelegate());
         encoder.setPersistenceDelegate(GeoPosition.class, new GeoPositionDelegate());
         encoder.setPersistenceDelegate(PhotoWrapper.class, new PhotoWrapperDelegate());
-        
+
         encoder.writeObject(t);
         encoder.close();
 
         String xml = baos.toString();
-        
+
         baos.close();
         return xml;
     }
-    
+
     public static Trip deserializeTrip(String xml) throws Exception {
         ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
         XMLDecoder decoder = new XMLDecoder(in);
@@ -81,7 +82,7 @@ public class DataManager {
         in.close();
         return t;
     }
-    
+
     public static final class GeoPositionDelegate extends DefaultPersistenceDelegate {
         public GeoPositionDelegate() {
             super(new String[] {"latitude", "longitude"});

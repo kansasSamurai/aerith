@@ -33,14 +33,14 @@ public class TransitionManager {
 
     static boolean ready = false;
     static final Object LOCK = new Object();
-    
+
     private static MainFrame mainFrame;
     private static NavigationHeader navPanel;
     private static TransitionPanel transPanel;
 
     private TransitionManager() {
     }
-    
+
     /**
      * Creates the main application frame.  Should be called from the
      * EDT only.
@@ -52,11 +52,11 @@ public class TransitionManager {
                                     DataType.PHOTOS.toString().toLowerCase() +
                                     ".uitheme");
         TypeLoaderFactory.addTypeLoader(new LinearGradientTypeLoader());
-        
+
         navPanel = new NavigationHeader();
         transPanel = new TransitionPanel(navPanel);
         mainFrame = new MainFrame(transPanel);
-        
+
         if (System.getProperty("aerith.noIntro") == null) {
             showIntroduction();
         } else {
@@ -65,15 +65,15 @@ public class TransitionManager {
 
         return mainFrame;
     }
-    
+
     static MainFrame getMainFrame() {
         return mainFrame;
     }
-    
+
     static void showTransitionPanel() {
         mainFrame.showTransitionPanel();
     }
-    
+
     static void showIntroduction() {
         mainFrame.showIntroduction();
     }
@@ -81,25 +81,25 @@ public class TransitionManager {
     static void showLoginOverlay() {
         showLoginOverlay(false);
     }
-    
+
     static void showLoginOverlay(boolean visible) {
         mainFrame.showLoginOverlay(visible);
     }
-    
+
     static void showWaitOverlay() {
         mainFrame.showWaitOverlay();
         String userid = mainFrame.getUserName();
         (new CatalogLoader(userid)).execute();
     }
-    
+
     static void hideWaitOverlay() {
         mainFrame.hideWaitOverlay();
     }
-    
+
     static void killOverlay() {
         mainFrame.killOverlay();
     }
-    
+
     static void showMainScreen(Catalog contacts) {
         if (contacts != null) {
             LobbyPanel lobbyPanel = transPanel.getContactsPanel();
@@ -111,7 +111,7 @@ public class TransitionManager {
         }
         transPanel.showCatalogPanel();
     }
-    
+
     static void showAlbums(User contact) {
         if (contact != null) {
             transPanel.getAlbumsPanel().setContact(contact);
@@ -119,40 +119,40 @@ public class TransitionManager {
         }
         transPanel.showCategoryPanel();
     }
-    
+
     static void showTripReport() {
         navPanel.addLink("Trip Report");
         transPanel.showTripReportPanel();
     }
-    
+
     static void showTripReport(Trip t) {
         navPanel.addLink("Trip Report");
         transPanel.showTripReportPanel(t);
     }
-    
+
     static void showSlideshow(User user, Photoset album) {
         transPanel.getAlbumsPanel().setContact(user);
         navPanel.addLink(Bundles.getMessage(TransitionManager.class, "TXT_YourAlbums"));
         showSlideshow(album);
     }
-    
+
     static void showSlideshow(Photoset album) {
         navPanel.addLink(album.getTitle());
         transPanel.resetSlideshowPanel();
         transPanel.showSlideshowPanel();
         populateSlideshow(album);
     }
-    
+
     private static void populateSlideshow(final Photoset album) {
         final PictureViewer viewer = transPanel.getSlideshowPanel();
         final ExecutorService service = Executors.newFixedThreadPool(4);
         final PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
-        
+
         new Thread(new Runnable() {
             public void run() {
                 PhotoList photos;
                 try {
-                    photos = photosetsInterface.getPhotos(album.getId());
+                    photos = photosetsInterface.getPhotos(album.getId(),10,1);
                 } catch (Exception e) {
                     return;
                 }
@@ -165,14 +165,14 @@ public class TransitionManager {
             }
         }).start();
     }
-    
+
     public static class PictureLoader implements Runnable {
         private static boolean useLargePicture = false;
         static {
             useLargePicture = System.getProperty("athena.largePictures") != null;
             System.out.println("[ATHENA] Use large picture: " + useLargePicture);
         }
-        
+
         private final PictureViewer viewer;
         private final Photo photo;
 
@@ -183,7 +183,7 @@ public class TransitionManager {
 
         public void run() {
             try {
-                BufferedImage image = ImageIO.read(new URL(useLargePicture ? 
+                BufferedImage image = ImageIO.read(new URL(useLargePicture ?
                                                            photo.getLargeUrl() :
                                                            photo.getMediumUrl()));
                 if (image != null) {
@@ -205,7 +205,7 @@ public class TransitionManager {
         public Catalog doInBackground() {
             return DataManager.get(userid);
         }
-        
+
         @Override
         protected void done() {
             try {

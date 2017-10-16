@@ -15,29 +15,35 @@ import com.sun.javaone.aerith.model.FlickrService;
 import org.xml.sax.SAXException;
 
 public class Catalog {
-    private final List<User> users = new ArrayList<User>();
+
     private Photoset[] randomPicks;
-    
+
+    private final List<User> users = new ArrayList<>();
+
+    public Photoset[] getRandomPicks() {
+        return randomPicks;
+    }
+
     public void addUsers(User... list) {
         for (User user : list) {
             System.out.println("adding user: " + user);
             users.add(user);
         }
     }
-    
+
     public User[] getUsers() {
         return users.toArray(new User[0]);
     }
-    
+
     @SuppressWarnings("unchecked")
     public void prefetch() {
         randomPicks = new Photoset[5];
         PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
-        
+
         try {
             User user = users.get(0);
             Collection photosets = photosetsInterface.getList(user.getId()).getPhotosets();
-            List<Photoset> shuffledSets = new ArrayList<Photoset>(photosets);
+            List<Photoset> shuffledSets = new ArrayList<>(photosets);
             Collections.shuffle(shuffledSets);
             int i = 0;
             for (Photoset set : shuffledSets) {
@@ -50,13 +56,8 @@ public class Catalog {
                     break;
                 }
             }
-          } catch (IOException e) {
-          } catch (SAXException e) {
-          } catch (FlickrException e) {
+          } catch (IOException | SAXException | FlickrException e) {
           }
     }
 
-    public Photoset[] getRandomPicks() {
-        return randomPicks;
-    }
 }

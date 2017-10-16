@@ -21,14 +21,12 @@ import javax.swing.SwingUtilities;
 
 import org.jdesktop.animation.timing.Animator;
 import org.jdesktop.animation.timing.TimingTarget;
-import org.jdesktop.animation.timing.Animator.EndBehavior;
 import org.jdesktop.animation.timing.Animator.RepeatBehavior;
 import org.jdesktop.animation.timing.interpolation.PropertySetter;
 import org.jdesktop.fuse.InjectedResource;
 import org.jdesktop.fuse.ResourceInjector;
 
 import com.sun.javaone.aerith.util.Bundles;
-import com.sun.xml.internal.messaging.saaj.soap.Envelope;
 
 public final class WaitOverlay extends JPanel {
     private String text;
@@ -106,7 +104,7 @@ public final class WaitOverlay extends JPanel {
         timer.start();
     }
 
-    private void startFadeOut() {        
+    private void startFadeOut() {
         Animator timer = PropertySetter.createAnimator(2000,this,"fade",1.0f,0.0f);
         PropertySetter ps = new PropertySetter(this,"opacity",1.0f,0.0f);
         timer.addTarget(ps);
@@ -125,18 +123,18 @@ public final class WaitOverlay extends JPanel {
                 }
                 TransitionManager.killOverlay();
             }
-        
+
             public void begin() {
             }
-        
+
             public void timingEvent(float arg2) {
             }
-            public void repeat() {            	
+            public void repeat() {
             }
         });
         timer.start();
     }
-    
+
     public void setFade(float fade) {
         this.fade  = fade;
         repaint();
@@ -154,7 +152,7 @@ public final class WaitOverlay extends JPanel {
     public float getOpacity() {
         return opacity;
     }
-    
+
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
@@ -164,8 +162,8 @@ public final class WaitOverlay extends JPanel {
 
         Composite composite = g2.getComposite();
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, fade));
-        
-        
+
+
         int y = (getHeight() - javaCup.getHeight()) / 3 - waitCircle.getHeight();
 
         Composite composite2 = g2.getComposite();
@@ -180,8 +178,8 @@ public final class WaitOverlay extends JPanel {
                      y + javaCup.getHeight() / 3, null);
         float x = paintText(g2, y);
         paintIcon(g2, x, y);
-        
-        
+
+
         g2.setComposite(composite);
     }
 
@@ -208,18 +206,18 @@ public final class WaitOverlay extends JPanel {
         FontRenderContext context = g2.getFontRenderContext();
         TextLayout layout = new TextLayout(text, messageFont, context);
         Rectangle2D bounds = layout.getBounds();
-        
+
         Rectangle rect = getClipBounds();
         float x = rect.x + (rect.width - waitCircle.getWidth(this) -
                             (float) bounds.getWidth()) / 2.0f;
-        
+
         g2.setColor(messageColor);
         layout.draw(g2,
                     x + iconWidth + 10,
                     y + layout.getAscent() +
                     rect.y + (rect.height - layout.getAscent() -
                               layout.getDescent()) / 2.0f);
-        
+
         return x;
     }
 
@@ -243,7 +241,7 @@ public final class WaitOverlay extends JPanel {
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                             RenderingHints.VALUE_INTERPOLATION_BILINEAR);
     }
-    
+
     private class LoadingMessenger implements TimingTarget {
         public void timingEvent(float fraction) {
             loadingRotation = fraction - fraction % (1.0 / 12.0);
@@ -256,7 +254,7 @@ public final class WaitOverlay extends JPanel {
 //                        iconWidth + 4, iconHeight + 4);
 //            }
         }
-        public void repeat() {        	
+        public void repeat() {
         }
 
         public void begin() {

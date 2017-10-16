@@ -42,7 +42,7 @@ class TripReportPanel extends JPanel {
     @InjectedResource
     private Color websiteBackground;
 
-    TripReportPanel() {        
+    TripReportPanel() {
         ResourceInjector.get().inject(this);
         setOpaque(false);
         setLayout(new BorderLayout());
@@ -50,7 +50,7 @@ class TripReportPanel extends JPanel {
         ActionButton previewButton = new ActionButton(new PreviewAction());
         ActionButton publishButton = new ActionButton(new PublishAction());
         publishButton.setMain(true);
-        
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.setOpaque(false);
         buttonPanel.add(new ActionButton(new SaveTripAction()));
@@ -69,11 +69,11 @@ class TripReportPanel extends JPanel {
         add(BorderLayout.NORTH, Box.createVerticalStrut(20));
         add(BorderLayout.EAST, Box.createHorizontalStrut(20));
     }
-    
+
     public Trip getTrip() {
         return trip;
     }
-    
+
     public void setTrip(Trip t) {
         if (t == null) {
             final Trip trip = new Trip();
@@ -100,10 +100,10 @@ class TripReportPanel extends JPanel {
 //            trip.setWaypoints(myTrip.getWaypoints());
 
         ///////////////END OF TESTING
-        
+
                     try {
                         com.aetrion.flickr.photosets.PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
-                        com.aetrion.flickr.photos.PhotoList photos = photosetsInterface.getPhotos("72057594067354711");
+                        com.aetrion.flickr.photos.PhotoList photos = photosetsInterface.getPhotos("72057594067354711",10,1);
                         for (Object obj : photos) {
                             Photo photo = (Photo)obj;
                             PhotoWrapper wrap = new PhotoWrapper(photo);
@@ -154,7 +154,7 @@ class TripReportPanel extends JPanel {
             g.drawImage(cache, 0, 0, null);
         }
     }
-    
+
     private final class SaveTripAction extends AbstractAction {
         private SaveTripAction() {
             super("Save");
@@ -167,7 +167,7 @@ class TripReportPanel extends JPanel {
             }
         }
     }
-    
+
     /**
      * Action for previewing the planned trip in the browser
      */
@@ -181,14 +181,14 @@ class TripReportPanel extends JPanel {
                 File previewDir = new File("preview");
                 URI uri = FileUtils.deployApplet(previewDir,
                         prepareDeploymentVariables(), trip);
-                
+
                 Desktop.getDesktop().browse(uri);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
     }
-    
+
     private final class PublishAction extends AbstractAction {
         private PublishAction() {
             super("Publish");
@@ -197,7 +197,7 @@ class TripReportPanel extends JPanel {
         public void actionPerformed(ActionEvent e) {
             try {
                 Map<String,String> variables = prepareDeploymentVariables();
-                
+
                 String homeDir = System.getProperty("user.home");
                 File deployDir = new File(homeDir + "/My Website/" + variables.get("TripReportTitle"));
                 try {
@@ -205,10 +205,10 @@ class TripReportPanel extends JPanel {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
-                
+
                 URL url = new URL("http://localhost/" + makeUrlSafe(variables.get("TripReportTitle") + "/trip-report.html"));
                 Desktop.getDesktop().browse(url.toURI());
-                
+
                 StringBuilder mail = new StringBuilder();
                 mail.append("mailto:yourContact@domain.com?");
                 mail.append("Content-Type=text/html");
@@ -231,18 +231,18 @@ class TripReportPanel extends JPanel {
             }
         }
     }
-    
+
     public static String makeUrlSafe(String input) throws UnsupportedEncodingException {
         return URLEncoder.encode(input, "UTF-8").replaceAll("\\+", "%20");
     }
-    
+
     public Map<String,String> prepareDeploymentVariables() {
         Map<String,String> variables = new HashMap<String,String>();
         variables.put("TripReportTitle", "Freakin' Awesome US Tour");
         variables.put("BackgroundColor", GraphicsUtil.getColorHexString(websiteBackground));
         return variables;
     }
-    
+
     public static void main(String[] args) {
         LocalResponseCache.installResponseCache();
         MainFrame frame = TransitionManager.createMainFrame();
@@ -250,5 +250,5 @@ class TripReportPanel extends JPanel {
         frame.setVisible(true);
         TransitionManager.showTripReport();
     }
-    
+
 }

@@ -15,7 +15,6 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,7 +43,7 @@ import org.progx.twinkle.ui.PictureViewer;
 public class MainApplet extends JApplet {
     private CardLayout layout;
     private SlideShowScreen slideshow;
-    
+
     /**
      * Creates a new instance of MainApplet
      */
@@ -55,22 +54,22 @@ public class MainApplet extends JApplet {
     public void init() {
         layout = new CardLayout();
         setLayout(layout);
-        
+
         slideshow = new SlideShowScreen();
         add(slideshow, "slideshow");
         MainScreen main = new MainScreen();
         add(main, "main");
         layout.show(getContentPane(), "main");
     }
-    
+
     private class MainScreen extends JXPanel {
         public MainScreen() {
             setBackground(Color.BLACK);
-            
+
             setLayout(new GridBagLayout());
             JButton slideshowButton = new JButton(new ViewSlideshowAction());
             JButton movieButton = new JButton(new PlayMovieAction());
-            
+
             slideshowButton.setBorderPainted(false);
             slideshowButton.setOpaque(false);
             slideshowButton.setContentAreaFilled(false);
@@ -80,7 +79,7 @@ public class MainApplet extends JApplet {
             slideshowButton.setFocusPainted(false);
             slideshowButton.setRolloverIcon(new ImageIcon(MainScreen.class.getResource("/resources/slideshow-rollover.png")));
             slideshowButton.setRolloverEnabled(true);
-            
+
             movieButton.setBorderPainted(false);
             movieButton.setOpaque(false);
             movieButton.setContentAreaFilled(false);
@@ -90,12 +89,12 @@ public class MainApplet extends JApplet {
             movieButton.setFocusPainted(false);
             movieButton.setRolloverIcon(new ImageIcon(MainScreen.class.getResource("/resources/movie-rollover.png")));
             movieButton.setRolloverEnabled(true);
-            
+
             add(slideshowButton, new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(12, 12, 11, 11), 0, 0));
             add(movieButton, new GridBagConstraints(1, 0, 1, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(12, 12, 11, 11), 0 ,0));
         }
     }
-    
+
     private class SlideShowScreen extends PictureViewer {
         public SlideShowScreen() {
         }
@@ -127,7 +126,7 @@ public class MainApplet extends JApplet {
             }).start();
         }
     }
-    
+
     private class ViewSlideshowAction extends AbstractAction {
         public ViewSlideshowAction() {
             super("View Slideshow", new ImageIcon(ViewSlideshowAction.class.getResource("/resources/slideshow.png")));
@@ -137,7 +136,7 @@ public class MainApplet extends JApplet {
             slideshow.run();
         }
     }
-    
+
     private class PlayMovieAction extends AbstractAction {
         public PlayMovieAction() {
             super("Play Movie", new ImageIcon(PlayMovieAction.class.getResource("/resources/movie.png")));

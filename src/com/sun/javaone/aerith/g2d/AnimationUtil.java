@@ -10,14 +10,9 @@
 package com.sun.javaone.aerith.g2d;
 
 import org.jdesktop.animation.timing.Animator;
-import org.jdesktop.animation.timing.Animator.EndBehavior;
-import org.jdesktop.animation.timing.Animator.RepeatBehavior;
-import org.jdesktop.animation.timing.interpolation.KeyFrames;
-import org.jdesktop.animation.timing.interpolation.KeyValues;
 import org.jdesktop.animation.timing.interpolation.PropertySetter;
 import org.jdesktop.swingx.JXPanel;
 
-import com.sun.xml.internal.messaging.saaj.soap.Envelope;
 
 /**
  *

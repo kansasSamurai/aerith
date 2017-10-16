@@ -29,14 +29,14 @@ public class Trip extends JavaBean {
     private String name;
     private String summary;
     private String title;
-    
+
     private List<PhotoWrapper> photos;
     private List<Waypoint> waypoints;
     private PropertyChangeListener imageListener;
     private GeneralPath path; //all values within this GP are stored between 0...1 so that
                               //I can scale according to the zoom level, and such
-    
-    
+
+
     /** Creates a new instance of Trip */
     public Trip() {
         photos = new ArrayList<PhotoWrapper>();
@@ -47,118 +47,118 @@ public class Trip extends JavaBean {
             }
         };
     }
-    
+
     public void setPath(GeneralPath path) {
         GeneralPath old = getPath();
         this.path = path;
         firePropertyChange("path", old, getPath());
     }
-    
+
     public GeneralPath getPath() {
         return path;
     }
-    
+
     public void setName(String name) {
         String old = getName();
         this.name = name == null ? "Unnamed" : name;
         firePropertyChange("name", old, getName());
     }
-    
+
     public String getName() {
         return name;
     }
-    
+
     public void setSummary(String summary) {
         String old = getSummary();
         this.summary = summary == null ? "Enter Summary" : summary;
         firePropertyChange("summary", old, getSummary());
     }
-    
+
     public String getSummary() {
         return summary;
     }
-    
+
     public void setTitle(String title) {
         String old = getTitle();
         this.title = title == null ? "No Title" : title;
         firePropertyChange("title", old, getTitle());
     }
-    
+
     public String getTitle() {
         return title;
     }
-    
+
     public void addPhoto(int index, PhotoWrapper photo) {
         photo.addPropertyChangeListener(imageListener);
         photos.add(index, photo);
     }
-    
+
     public void addPhoto(PhotoWrapper photo) {
         photo.addPropertyChangeListener(imageListener);
         photos.add(photo);
     }
-    
+
     public void removePhoto(int index) {
         photos.remove(index);
     }
-    
+
     public void removePhoto(PhotoWrapper photo) {
         photos.remove(photo);
     }
-    
+
     public void setPhotos(List<PhotoWrapper> photos) {
         this.photos = photos == null ? new ArrayList<PhotoWrapper>() : new ArrayList<PhotoWrapper>(photos);
         firePropertyChange("photos", null, getPhotos());
     }
-    
+
     public List<PhotoWrapper> getPhotos() {
         return new ArrayList<PhotoWrapper>(photos);
     }
-    
+
     public int getPhotoCount() {
         return photos.size();
     }
-    
+
     public PhotoWrapper getPhoto(int index) {
         return photos.get(index);
     }
-    
+
     public void addWaypoint(int index, Waypoint waypoint) {
         waypoints.add(index, waypoint);
         firePropertyChange("waypoint",null,waypoint);
     }
-    
+
     public void addWaypoint(Waypoint waypoint) {
         waypoints.add(waypoint);
         firePropertyChange("waypoint",null,waypoint);
     }
-    
+
     public void removeWaypoint(int index) {
         waypoints.remove(index);
     }
-    
+
     public void removeWaypoint(Waypoint waypoint) {
         waypoints.remove(waypoint);
     }
-    
+
     public void setWaypoints(List<Waypoint> waypoints) {
         this.waypoints = waypoints == null ? new ArrayList<Waypoint>() : new ArrayList<Waypoint>(waypoints);
         firePropertyChange("waypoints", null, getWaypoints());
     }
-    
+
     public List<Waypoint> getWaypoints() {
         return new ArrayList<Waypoint>(waypoints);
     }
-    
+
     public int getWaypointCount() {
         return waypoints.size();
     }
-    
+
     public Waypoint getWaypoint(int index) {
         return waypoints.get(index);
     }
-    
-    
+
+
     public static final class Waypoint extends DefaultWaypoint {
         private String name = "New Waypoint";
         private String title = "Click to edit";
@@ -234,11 +234,11 @@ public class Trip extends JavaBean {
             this.photos = photos == null ? new ArrayList<PhotoWrapper>() : new ArrayList<PhotoWrapper>(photos);
             firePropertyChange("photos", null, getPhotos());
         }
-    
+
         public List<PhotoWrapper> getPhotos() {
             return new ArrayList<PhotoWrapper>(photos);
         }
-        
+
         public int getPhotoCount() {
             return photos.size();
         }
@@ -247,8 +247,8 @@ public class Trip extends JavaBean {
             return photos.get(index);
         }
     }
-    
-    
+
+
     //FOR TESTING
     public static void main(String... args) {
         try {
@@ -268,12 +268,12 @@ public class Trip extends JavaBean {
             t.addWaypoint(w2);
 
             com.aetrion.flickr.photosets.PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
-            com.aetrion.flickr.photos.PhotoList photos = photosetsInterface.getPhotos("72057594078268040");
+            com.aetrion.flickr.photos.PhotoList photos = photosetsInterface.getPhotos("72057594078268040",10,1);
             int index = 0;
             for (Object obj : photos) {
                 (index % 2 == 0 ? w1 : w2).addPhoto(new PhotoWrapper((Photo)obj));
             }
-            
+
             System.out.println(DataManager.serializeTrip(t));
         } catch (Exception e) {
             e.printStackTrace();
