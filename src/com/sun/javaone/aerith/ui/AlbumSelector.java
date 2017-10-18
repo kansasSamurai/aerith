@@ -71,6 +71,7 @@ import com.sun.javaone.aerith.util.Bundles;
 // TODO: when scrolling, always select the first or last element in the view
 
 public class AlbumSelector extends JPanel {
+
     private final AlbumDetails albumDetails;
     private final AlbumList albumList;
     private final DefaultListModel albumListModel;
@@ -86,28 +87,42 @@ public class AlbumSelector extends JPanel {
     @InjectedResource
     private Color selectionColor, listColor, detailsColor, listItemColor,
                   screenshotColor, screenshotTextColor;
+
     @InjectedResource
     private float selectionOpacity, selectionBorderOpacity, listOpacity,
                   listBorderOpacity, listUnselectedItemOpacity;
+
     @InjectedResource
     private Font listItemFont, listSelectedItemFont, screenshotFont;
+
     @InjectedResource(key="Common.shadowColor")
     private Color shadowColor;
+
     @InjectedResource(key="Common.shadowOpacity")
     private float shadowOpacity;
+
     @InjectedResource
     private int shadowDistance;
+
     @InjectedResource(key="Common.shadowDirection")
     private int shadowDirection;
+
     @InjectedResource
     private Font detailsBigFont, detailsSmallFont;
+
     @InjectedResource
     private float screenshotOpacity;
+
     @InjectedResource
     private BufferedImage starOn, starOff;
+
     @InjectedResource
     private Dimension screenshotDimension;
 
+    /**
+     * Transparent JPanel(JxPanel) w/ BorderLayout
+     *
+     */
     AlbumSelector() {
         super(new BorderLayout(0, 0));
         setOpaque(false);
@@ -148,6 +163,9 @@ public class AlbumSelector extends JPanel {
         }
     }
 
+    /**
+     * Customized JList component
+     */
     private class AlbumList extends JList {
         private AlbumList(ListModel model) {
             super(model);
@@ -156,12 +174,12 @@ public class AlbumSelector extends JPanel {
             setCellRenderer(new AlbumsListCellRenderer());
 
             addListSelectionListener(new ListSelectionListener() {
-                public void valueChanged(ListSelectionEvent e) {
-                    Rectangle bounds = getCellBounds(e.getFirstIndex(),
-                                                     e.getLastIndex());
+                @Override public void valueChanged(ListSelectionEvent e) {
+                    final Rectangle bounds = getCellBounds(e.getFirstIndex(), e.getLastIndex());
                     if (bounds == null) {
                         return;
                     }
+
                     albumDetails.repaint(albumDetails.getWidth() - 20,
                                         bounds.y - 6,
                                         20,
@@ -177,47 +195,58 @@ public class AlbumSelector extends JPanel {
 
         @Override
         public Dimension getPreferredSize() {
-            Dimension parentSize = super.getPreferredSize();
-            Dimension containerSize = AlbumSelector.this.getSize();
-
-            return new Dimension(containerSize.width / 3,
-                                 parentSize.height);
+            final Dimension parentSize = super.getPreferredSize();
+            final Dimension containerSize = AlbumSelector.this.getSize();
+            return new Dimension(containerSize.width / 3, parentSize.height);
         }
 
         @Override
         protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g;
+            final Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                                 RenderingHints.VALUE_ANTIALIAS_ON);
 
+            // == List background ==
+            // Save, then adjust, graphics composite
             Composite composite = g2.getComposite();
-            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
-                                                       listOpacity));
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, listOpacity));
 
             g2.setColor(listColor);
 
-            RoundRectangle2D background;
-            background = new RoundRectangle2D.Double(3.0, 3.0,
-                                                     (double) getWidth() - 18.0,
-                                                     (double) getHeight() - 6.0,
-                                                     10, 10);
+            final RoundRectangle2D background = new RoundRectangle2D.Double(
+                    3.0,
+                    3.0,
+                    (double) getWidth() - 18.0,
+                    (double) getHeight() - 6.0,
+                    10,
+                    10);
             g2.fill(background);
 
-            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
-                                                       listBorderOpacity));
-            Stroke stroke = g2.getStroke();
+            // == List border ==
+            // Adjust graphics composite for border
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, listBorderOpacity));
+
+            final Stroke stroke = g2.getStroke();
             g2.setStroke(new BasicStroke(3.0f));
             g2.draw(background);
+
+            // Restore stroke
             g2.setStroke(stroke);
 
+            // Restore composite
             g2.setComposite(composite);
 
             super.paintComponent(g);
         }
     }
 
+    /**
+     * Custom CellRenderer for AlbumList
+     */
     private class AlbumsListCellRenderer extends DefaultListCellRenderer {
+
         private boolean isSelected;
+
         private int index;
 
         private final Icon[] ratings = new Icon[6];
@@ -296,14 +325,14 @@ public class AlbumSelector extends JPanel {
 
         @Override
         protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g;
+            final Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                                 RenderingHints.VALUE_ANTIALIAS_ON);
 
             if (isSelected) {
                 paintSelection(g2);
             }
-            Point p = paintText(g2);
+            final Point p = paintText(g2);
             paintIcon(g2, p.x, p.y);
         }
 
@@ -312,13 +341,12 @@ public class AlbumSelector extends JPanel {
         }
 
         private void paintSelection(Graphics2D g2) {
-            Composite composite = g2.getComposite();
-            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
-                                                       selectionOpacity));
+            final Composite composite = g2.getComposite();
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, selectionOpacity));
 
+            final Color color = g2.getColor();
             g2.setColor(selectionColor);
 
-            RoundRectangle2D background;
             double y = 2.0;
             double height = (double) getHeight() - 6.0;
             if (index == 0 || index == albumListModel.size() - 1) {
@@ -327,42 +355,39 @@ public class AlbumSelector extends JPanel {
             if (index == 0) {
                 y += 14.0;
             }
-            background = new RoundRectangle2D.Double(-6.0, y,
-                                                     (double) getWidth() + 3.0,
-                                                     height,
-                                                     12, 12);
+            final RoundRectangle2D background;
+            background = new RoundRectangle2D.Double(
+                    -6.0, y, (double) getWidth() + 3.0,
+                    height, 12, 12);
             g2.fill(background);
 
-            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
-                                                       selectionBorderOpacity));
-            Stroke stroke = g2.getStroke();
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, selectionBorderOpacity));
+            final Stroke stroke = g2.getStroke();
             g2.setStroke(new BasicStroke(3.0f));
             g2.draw(background);
-            g2.setStroke(stroke);
 
+            // Restore graphics settings
+            g2.setColor(color); // added by rlw; maybe it was left out on purpose?
+            g2.setStroke(stroke);
             g2.setComposite(composite);
         }
 
         private Point paintText(Graphics2D g2) {
-            FontMetrics fm = getFontMetrics(getFont());
+            final FontMetrics fm = getFontMetrics(getFont());
             int x = getInsets().left;
             int y = getInsets().top + fm.getAscent();
 
-            Composite composite = g2.getComposite();
+            final Composite composite = g2.getComposite();
 
             if (isSelected) {
                 y -= 2;
-                g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
-                                                           shadowOpacity));
+                g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, shadowOpacity));
             } else {
-                g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
-                                                           listUnselectedItemOpacity));
+                g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, listUnselectedItemOpacity));
             }
 
             g2.setColor(shadowColor);
-            TextLayout layout = new TextLayout(getText(),
-                                               getFont(),
-                                               g2.getFontRenderContext());
+            final TextLayout layout = new TextLayout(getText(), getFont(), g2.getFontRenderContext());
             layout.draw(g2,
                         x + (int) Math.ceil(shadowOffsetX),
                         y + (int) Math.ceil(shadowOffsetY));
@@ -502,8 +527,12 @@ public class AlbumSelector extends JPanel {
                     button.paintImmediately(button.getBounds());
 
                     SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            TransitionManager.showSlideshow(album);
+                        @Override public void run() {
+                            try {
+                                TransitionManager.showSlideshow(album);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
                     });
                 }

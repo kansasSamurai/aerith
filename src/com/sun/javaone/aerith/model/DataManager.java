@@ -12,7 +12,6 @@ import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,8 +22,11 @@ import com.flickr4java.flickr.people.PeopleInterface;
 import com.sun.javaone.aerith.model.flickr.Catalog;
 import com.sun.javaone.aerith.ui.PhotoWrapper;
 import org.jdesktop.swingx.mapviewer.GeoPosition;
-import org.xml.sax.SAXException;
 
+/**
+ *
+ * @author aerith
+ */
 public class DataManager {
 
     @SuppressWarnings("unchecked")
@@ -48,7 +50,7 @@ public class DataManager {
 //            }
 
             // It appears that this list is not used? rlw
-            List<User> users = new ArrayList<>(6);
+            final List<User> users = new ArrayList<>(6);
             Collections.shuffle(users);
 
         } catch (FlickrException e) {
@@ -59,27 +61,26 @@ public class DataManager {
     }
 
     public static String serializeTrip(Trip t) throws Exception {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        XMLEncoder encoder = new XMLEncoder(baos);
-        encoder.setPersistenceDelegate(GeneralPath.class, new GeneralPathDelegate());
-        encoder.setPersistenceDelegate(GeoPosition.class, new GeoPositionDelegate());
-        encoder.setPersistenceDelegate(PhotoWrapper.class, new PhotoWrapperDelegate());
-
-        encoder.writeObject(t);
-        encoder.close();
-
-        String xml = baos.toString();
-
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            final XMLEncoder encoder = new XMLEncoder(baos);
+            encoder.setPersistenceDelegate(GeneralPath.class, new GeneralPathDelegate());
+            encoder.setPersistenceDelegate(GeoPosition.class, new GeoPositionDelegate());
+            encoder.setPersistenceDelegate(PhotoWrapper.class, new PhotoWrapperDelegate());
+            encoder.writeObject(t);
+            encoder.close();
+        final String xml = baos.toString();
         baos.close();
+
         return xml;
     }
 
     public static Trip deserializeTrip(String xml) throws Exception {
-        ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
-        XMLDecoder decoder = new XMLDecoder(in);
-        Trip t = (Trip)decoder.readObject();
-        decoder.close();
+        final ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
+            final XMLDecoder decoder = new XMLDecoder(in);
+            final Trip t = (Trip)decoder.readObject();
+            decoder.close();
         in.close();
+
         return t;
     }
 
@@ -88,11 +89,13 @@ public class DataManager {
             super(new String[] {"latitude", "longitude"});
         }
     }
+
     public static final class PhotoWrapperDelegate extends DefaultPersistenceDelegate {
         public PhotoWrapperDelegate() {
             super(new String[] {"flickrPhoto"});
         }
     }
+
     public static final class GeneralPathDelegate extends PersistenceDelegate {
         protected Expression instantiate(Object oldInstance, Encoder out) {
             return new Expression(oldInstance, GeneralPath.class, "new", new Object[0]);

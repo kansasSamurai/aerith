@@ -34,15 +34,20 @@ import org.jdesktop.fuse.InjectedResource;
 import org.jdesktop.fuse.ResourceInjector;
 import org.jdesktop.swingx.mapviewer.LocalResponseCache;
 
+/**
+ *
+ * @author aerith
+ */
 class TripReportPanel extends JPanel {
 
     private Trip trip;
 
     private TripEditPanel editPanel;
 
-////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     // THEME SPECIFIC FIELDS
     ////////////////////////////////////////////////////////////////////////////
+
     /** @noinspection UNUSED_SYMBOL*/
     @InjectedResource
     private Color websiteBackground;
@@ -181,12 +186,10 @@ class TripReportPanel extends JPanel {
             super("Preview");
         }
 
-        public void actionPerformed(ActionEvent e) {
+        @Override public void actionPerformed(ActionEvent e) {
             try {
-                File previewDir = new File("preview");
-                URI uri = FileUtils.deployApplet(previewDir,
-                        prepareDeploymentVariables(), trip);
-
+                final File previewDir = new File("preview");
+                final URI uri = FileUtils.deployApplet(previewDir, prepareDeploymentVariables(), trip);
                 Desktop.getDesktop().browse(uri);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -194,27 +197,30 @@ class TripReportPanel extends JPanel {
         }
     }
 
+    /**
+     *
+     */
     private final class PublishAction extends AbstractAction {
         private PublishAction() {
             super("Publish");
         }
 
-        public void actionPerformed(ActionEvent e) {
+        @Override public void actionPerformed(ActionEvent e) {
             try {
-                Map<String,String> variables = prepareDeploymentVariables();
+                final Map<String,String> variables = prepareDeploymentVariables();
 
-                String homeDir = System.getProperty("user.home");
-                File deployDir = new File(homeDir + "/My Website/" + variables.get("TripReportTitle"));
+                final String homeDir = System.getProperty("user.home");
+                final File deployDir = new File(homeDir + "/My Website/" + variables.get("TripReportTitle"));
                 try {
                     FileUtils.deployApplet(deployDir, variables, trip);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
 
-                URL url = new URL("http://localhost/" + makeUrlSafe(variables.get("TripReportTitle") + "/trip-report.html"));
+                final URL url = new URL("http://localhost/" + makeUrlSafe(variables.get("TripReportTitle") + "/trip-report.html"));
                 Desktop.getDesktop().browse(url.toURI());
 
-                StringBuilder mail = new StringBuilder();
+                final StringBuilder mail = new StringBuilder();
                 mail.append("mailto:yourContact@domain.com?");
                 mail.append("Content-Type=text/html");
                 mail.append("&subject=")

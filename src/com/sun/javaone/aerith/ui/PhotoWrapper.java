@@ -12,6 +12,10 @@ import javax.swing.ImageIcon;
 import com.flickr4java.flickr.photos.Photo;
 import com.sun.javaone.aerith.g2d.GraphicsUtil;
 
+/**
+ *
+ * @author aerith
+ */
 public class PhotoWrapper implements Runnable {
 
     private static final int ICONSIZE_1 = 133;

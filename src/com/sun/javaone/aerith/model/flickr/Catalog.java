@@ -12,8 +12,11 @@ import com.flickr4java.flickr.photosets.PhotosetsInterface;
 import com.flickr4java.flickr.people.PeopleInterface;
 import com.flickr4java.flickr.people.User;
 import com.sun.javaone.aerith.model.FlickrService;
-import org.xml.sax.SAXException;
 
+/**
+ *
+ * @author aerith
+ */
 public class Catalog {
 
     private Photoset[] randomPicks;
@@ -38,12 +41,12 @@ public class Catalog {
     @SuppressWarnings("unchecked")
     public void prefetch() {
         randomPicks = new Photoset[5];
-        PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
 
+        final PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
         try {
-            User user = users.get(0);
-            Collection photosets = photosetsInterface.getList(user.getId()).getPhotosets();
-            List<Photoset> shuffledSets = new ArrayList<>(photosets);
+            final User user = users.get(0);
+            final Collection photosets = photosetsInterface.getList(user.getId()).getPhotosets();
+            final List<Photoset> shuffledSets = new ArrayList<>(photosets);
             Collections.shuffle(shuffledSets);
             int i = 0;
             for (Photoset set : shuffledSets) {
@@ -57,6 +60,7 @@ public class Catalog {
                 }
             }
           } catch (FlickrException e) {
+              e.printStackTrace();
           }
     }
 

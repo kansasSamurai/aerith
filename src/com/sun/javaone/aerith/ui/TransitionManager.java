@@ -102,7 +102,7 @@ public class TransitionManager {
 
     static void showMainScreen(Catalog contacts) {
         if (contacts != null) {
-            LobbyPanel lobbyPanel = transPanel.getContactsPanel();
+            final LobbyPanel lobbyPanel = transPanel.getContactsPanel();
             //contactsPanel.setContacts(contacts);
             lobbyPanel.setTasks(contacts.getUsers()[0]);
             lobbyPanel.setRandomPicks(contacts.getRandomPicks());
