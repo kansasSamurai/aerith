@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.glu.GLU;
 import javax.swing.AbstractAction;
@@ -62,7 +63,7 @@ public class PictureViewer extends CompositeGLPanel {
     public static final String KEY_ACTION_NEXT_PICTURE = "next";
     public static final String KEY_ACTION_PREVIOUS_PICTURE = "previous";
     public static final String KEY_ACTION_SHOW_PICTURE = "show";
-    
+
     private static boolean envAntiAliasing = true;
     static {
         envAntiAliasing = System.getProperty("twinkle.aa") == null;
@@ -73,13 +74,13 @@ public class PictureViewer extends CompositeGLPanel {
         envTransparent = System.getProperty("twinkle.transparent") != null;
         System.out.println("[TWINKLE] Transparent: " + envTransparent);
     }
-    
+
     private static final float QUAD_WIDTH = 65.0f;
 
     private static final int THUMB_WIDTH = 48;
     private static final double SELECTED_THUMB_RATIO = 0.35;
     private static final double SELECTED_THUMB_EXTRA_WIDTH = THUMB_WIDTH * SELECTED_THUMB_RATIO;
-    
+
     private static final int INDEX_LEFT_PICTURE = 0;
     private static final int INDEX_SELECTED_PICTURE = 1;
     private static final int INDEX_NEXT_PICTURE = 2;
@@ -87,16 +88,16 @@ public class PictureViewer extends CompositeGLPanel {
 
     private List<Picture> pictures = Collections.synchronizedList(new ArrayList<Picture>());
     private Renderable[] renderables = new Renderable[4];
-    
+
     private Queue<Renderable> initQuadsQueue = new ConcurrentLinkedQueue<Renderable>();
     private Queue<Renderable> disposeQuadsQueue = new ConcurrentLinkedQueue<Renderable>();
 
     private float camPosX = 0.0f;
     private float camPosY = 0.0f;
     private float camPosZ = 100.0f;
-    
+
     private int picturesStripHeight = 0;
-    
+
     private BufferedImage textImage = null;
     private BufferedImage nextTextImage = null;
     private ShadowFactory shadowFactory = new ShadowFactory(11, 1.0f, Color.BLACK);
@@ -106,22 +107,22 @@ public class PictureViewer extends CompositeGLPanel {
 
     private int selectedPicture = -1;
     private int nextPicture = -1;
-    
+
     private boolean pictureIsShowing = false;
     private Equation curve = new AnimationEquation(2.8, -0.98);//3.6, -1.0);
     private Timer animator;
-    
+
     private boolean antiAliasing = envAntiAliasing;
     private boolean stopRendering;
 
     private final Object animLock = new Object();
-    
+
     public PictureViewer() {
         super(!envTransparent, /*true*/false);
         setPreferredSize(new Dimension(640, 480));
-        
+
         addMouseWheelListener(new MouseWheelDriver());
-        
+
         setFocusable(true);
         registerActions();
 
@@ -144,7 +145,7 @@ public class PictureViewer extends CompositeGLPanel {
             public void run() {
                 int size;
                 Picture picture = new Picture(name, image);
-                
+
                 pictures.add(picture);
                 size = pictures.size();
 
@@ -155,7 +156,7 @@ public class PictureViewer extends CompositeGLPanel {
                 } else if (size - 1 == nextPicture + 1) {
                     initQuadsQueue.add(createQuad(INDEX_RIGHT_PICTURE, 2));
                 }
-                
+
                 float ratio = picture.getRatio();
                 picturesStripHeight = Math.max(picturesStripHeight,
                                               (int) (THUMB_WIDTH + SELECTED_THUMB_EXTRA_WIDTH / ratio));
@@ -167,7 +168,7 @@ public class PictureViewer extends CompositeGLPanel {
         });
         repaint();
     }
-    
+
     public void dispose() {
         stopRendering = true;
         for (Renderable renderable : renderables) {
@@ -181,12 +182,12 @@ public class PictureViewer extends CompositeGLPanel {
         pictures.clear();
         repaint();
     }
-    
+
     public void showSelectedPicture() {
         if (animator != null && animator.isRunning()) {
             return;
         }
-        
+
         pictureIsShowing = !pictureIsShowing;
         ((ShowPictureAction) getActionMap().get(KEY_ACTION_SHOW_PICTURE)).toggleName();
 
@@ -201,13 +202,13 @@ public class PictureViewer extends CompositeGLPanel {
             showPicture(true);
         }
     }
-    
+
     public void previousPicture() {
         if (selectedPicture > 0) {
             showPicture(false);
         }
     }
-    
+
     @Override
     public void init(GLAutoDrawable drawable) {
         super.init(drawable);
@@ -215,11 +216,11 @@ public class PictureViewer extends CompositeGLPanel {
 
         initQuads(gl);
     }
-    
+
     private void registerActions() {
         KeyStroke stroke;
         Action action;
-        
+
         InputMap inputMap = getInputMap();
         ActionMap actionMap = getActionMap();
 
@@ -230,7 +231,7 @@ public class PictureViewer extends CompositeGLPanel {
 
         action = new NextPictureAction();
         actionMap.put(KEY_ACTION_NEXT_PICTURE, action);
-        
+
         stroke = KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0);
         inputMap.put(stroke, KEY_ACTION_PREVIOUS_PICTURE);
         stroke = KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0);
@@ -238,7 +239,7 @@ public class PictureViewer extends CompositeGLPanel {
 
         action = new PreviousPictureAction();
         actionMap.put(KEY_ACTION_PREVIOUS_PICTURE, action);
-        
+
         stroke = KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0);
         inputMap.put(stroke, KEY_ACTION_SHOW_PICTURE);
         stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
@@ -247,11 +248,11 @@ public class PictureViewer extends CompositeGLPanel {
         action = new ShowPictureAction();
         actionMap.put(KEY_ACTION_SHOW_PICTURE, action);
     }
-    
+
     private void createButtons() {
         ControlButton button;
         ControlPanel buttonsPanel = new ControlPanel();
-        
+
         button = new ControlButton(getActionMap().get(KEY_ACTION_PREVIOUS_PICTURE));
         buttonsPanel.add(button);
         button = new ControlButton(getActionMap().get(KEY_ACTION_SHOW_PICTURE));
@@ -264,30 +265,30 @@ public class PictureViewer extends CompositeGLPanel {
                                                      2, 1,
                                                      0.0, 1.0,
                                                      GridBagConstraints.LINE_START,
-                                                     GridBagConstraints.VERTICAL, 
+                                                     GridBagConstraints.VERTICAL,
                                                      new Insets(0, 0, 0, 0),
                                                      0, 0));
         add(buttonsPanel, new GridBagConstraints(0, 1,
                                                  1, 1,
                                                  0.0, 0.0,
                                                  GridBagConstraints.LINE_START,
-                                                 GridBagConstraints.NONE, 
+                                                 GridBagConstraints.NONE,
                                                  new Insets(0, 13, 13, 0),
                                                  0, 0));
         add(Box.createHorizontalGlue(), new GridBagConstraints(1, 1,
                                                                1, 1,
                                                                1.0, 0.0,
                                                                GridBagConstraints.LINE_START,
-                                                               GridBagConstraints.HORIZONTAL, 
+                                                               GridBagConstraints.HORIZONTAL,
                                                                new Insets(0, 0, 0, 0),
                                                                0, 0));
     }
-    
+
     private void showPicture(final boolean next) {
         if (animator != null && animator.isRunning()) {
             return;
         }
-        
+
         if (pictureIsShowing) {
             new Thread(new Runnable() {
                 /** @noinspection BusyWait*/
@@ -321,11 +322,11 @@ public class PictureViewer extends CompositeGLPanel {
             }).start();
             return;
         }
-        
+
         animator = new Timer(10, new SlideAnimation(next));
         animator.start();
     }
-    
+
     private Renderable createQuad(int index, int pictureNumber) {
         Picture picture = pictures.get(pictureNumber);
 
@@ -340,23 +341,23 @@ public class PictureViewer extends CompositeGLPanel {
             height = (int) (QUAD_WIDTH / 1.5);
             width = (int) (height * ratio);
         }
-        
+
         Renderable quad = RenderableFactory.createReflectedQuad(0.0f, 0.0f, 0.0f,
                                                                 width, height,
                                                                 picture.getImage(), null,
                                                                 picture.getName());
         renderables[index] = quad;
-        
+
         if (index == INDEX_SELECTED_PICTURE) {
             selectedPicture = pictureNumber;
-            
+
             quad.setPosition(-7.0f, 0.0f, 0.0f);
             quad.setRotation(0, 30, 0);
-            
+
             textImage = generateTextImage(picture);
         } else if (index == INDEX_NEXT_PICTURE) {
             nextPicture = pictureNumber;
-            
+
             quad.setScale(0.5f, 0.5f, 0.5f);
             quad.setPosition(36.0f, -height / 2.0f, 30.0f);
             quad.setRotation(0, -20, 0);
@@ -368,7 +369,7 @@ public class PictureViewer extends CompositeGLPanel {
             quad.setPosition(-7.0f - QUAD_WIDTH * 2.0f, 0.0f, 0.0f);
             quad.setRotation(0, 30, 0);
         }
-        
+
         return quad;
     }
 
@@ -380,7 +381,7 @@ public class PictureViewer extends CompositeGLPanel {
         GlyphVector vector = textFont.createGlyphVector(context, picture.getName());
         Rectangle bounds = vector.getPixelBounds(context, 0.0f, 0.0f);
         TextLayout layout = new TextLayout(picture.getName(), textFont, context);
-        
+
         BufferedImage image = new BufferedImage((int) (bounds.getWidth()),
                                                 (int) (layout.getAscent() + layout.getDescent() + layout.getLeading()),
                                                 BufferedImage.TYPE_INT_ARGB);
@@ -389,7 +390,7 @@ public class PictureViewer extends CompositeGLPanel {
                             RenderingHints.VALUE_ANTIALIAS_ON);
         layout.draw(g2, 0, layout.getAscent());
         g2.dispose();
-        
+
         BufferedImage shadow = shadowFactory.createShadow(image);
         BufferedImage composite = new BufferedImage(shadow.getWidth(),
                                                     shadow.getHeight(),
@@ -400,10 +401,10 @@ public class PictureViewer extends CompositeGLPanel {
                      2 - (shadow.getHeight() - image.getHeight()) / 2);
         g2.drawImage(image, null, 0, 0);
         g2.dispose();
-        
+
         shadow.flush();
         image.flush();
-        
+
         return composite;
     }
 
@@ -437,16 +438,16 @@ public class PictureViewer extends CompositeGLPanel {
         //paintPicturesStrip(g2);
         paintInfo(g2);
     }
-    
+
     private void paintInfo(Graphics2D g2) {
         g2.setColor(Color.WHITE);
-        
+
         if (Debug.isDebug()) {
             g2.drawString("X: " + camPosX, 5, 15);
             g2.drawString("Y: " + camPosY, 5, 30);
             g2.drawString("Z: " + camPosZ, 5, 45);
         }
-        
+
         if (textImage != null) {
             Composite composite = g2.getComposite();
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, textAlpha));
@@ -456,7 +457,7 @@ public class PictureViewer extends CompositeGLPanel {
             g2.setComposite(composite);
         }
     }
-    
+
     private static void setupForegroundGraphics(Graphics2D g2) {
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                             RenderingHints.VALUE_INTERPOLATION_BILINEAR);
@@ -468,16 +469,16 @@ public class PictureViewer extends CompositeGLPanel {
             initAndDisposeQuads(gl);
             return;
         }
-        
+
         initScene(gl);
         initAndDisposeQuads(gl);
-        
+
         Renderable scene = new Renderable() {
             @Override
             public Point3f getPosition() {
                 return null;
             }
-        
+
             @Override
             public void render(GL gl, boolean antiAliased) {
                 setupCamera(gl, glu);
@@ -503,7 +504,7 @@ public class PictureViewer extends CompositeGLPanel {
             }
         }
     }
-    
+
     private void initAndDisposeQuads(final GL gl) {
         while (!initQuadsQueue.isEmpty()) {
             Renderable quad = initQuadsQueue.poll();
@@ -511,7 +512,7 @@ public class PictureViewer extends CompositeGLPanel {
                 quad.init(gl);
             }
         }
-        
+
         while (!disposeQuadsQueue.isEmpty()) {
             Renderable quad = disposeQuadsQueue.poll();
             if (quad != null) {
@@ -519,17 +520,19 @@ public class PictureViewer extends CompositeGLPanel {
             }
         }
     }
-    
+
     private static void initScene(GL gl) {
-        gl.glMatrixMode(GL.GL_MODELVIEW);
-        gl.glLoadIdentity();
+        // [1] gl.glMatrixMode(GL.GL_MODELVIEW));
+        // [1] gl.glLoadIdentity();
+        gl.getGL2().glMatrixMode(GL2.GL_MODELVIEW);
+        gl.getGL2().glLoadIdentity();
     }
 
     private void setupCamera(GL gl, GLU glu) {
         glu.gluLookAt(camPosX, camPosY, camPosZ,
                       0.0f, 0.0f, 0.0f,
                       0.0f, 1.0f, 0.0f);
-        gl.glTranslatef(0.0f, -1.0f, 0.0f);
+        gl.getGL2().glTranslatef(0.0f, -1.0f, 0.0f);
     }
 
     private void renderItems(GL gl, boolean antiAliased) {
@@ -537,25 +540,25 @@ public class PictureViewer extends CompositeGLPanel {
             setAndRender(gl, renderable, antiAliased);
         }
     }
-    
+
     private static void setAndRender(GL gl, Renderable renderable, boolean antiAliased) {
         if (renderable == null) {
             return;
         }
-        
+
         Point3f pos = renderable.getPosition();
         Point3i rot = renderable.getRotation();
         Point3f scale = renderable.getScale();
 
-        gl.glPushMatrix();
-        gl.glScalef(scale.x, scale.y, scale.z);
-        gl.glTranslatef(pos.x, pos.y + 4.0f, pos.z);
-        gl.glRotatef(rot.x, 1.0f, 0.0f, 0.0f);
-        gl.glRotatef(rot.y, 0.0f, 1.0f, 0.0f);
-        gl.glRotatef(rot.z, 0.0f, 0.0f, 1.0f);
-        
+        gl.getGL2().glPushMatrix();
+        gl.getGL2().glScalef(scale.x, scale.y, scale.z);
+        gl.getGL2().glTranslatef(pos.x, pos.y + 4.0f, pos.z);
+        gl.getGL2().glRotatef(rot.x, 1.0f, 0.0f, 0.0f);
+        gl.getGL2().glRotatef(rot.y, 0.0f, 1.0f, 0.0f);
+        gl.getGL2().glRotatef(rot.z, 0.0f, 0.0f, 1.0f);
+
         renderable.render(gl, antiAliased);
-        gl.glPopMatrix();
+        gl.getGL2().glPopMatrix();
     }
 
     private final class ZoomAnimation implements ActionListener {
@@ -585,15 +588,15 @@ public class PictureViewer extends CompositeGLPanel {
             if (!pictureIsShowing) {
                 factor = 1.0 - factor;
             }
-            
+
             Renderable quad = renderables[INDEX_SELECTED_PICTURE];
             Point3f position = quad.getPosition();
-            
+
             quad.setRotation(0, (int) (30.0 * (1.0 - factor)), 0);
             quad.setPosition((float) (-7.0f * (1.0 - factor)),
                              position.y,
                              (float) (30.0 * factor));
-      
+
             quad = renderables[INDEX_NEXT_PICTURE];
             if (quad != null) {
                 position = quad.getPosition();
@@ -606,14 +609,14 @@ public class PictureViewer extends CompositeGLPanel {
 
     private final class SlideAnimation implements ActionListener {
         private static final int ANIM_DELAY = 800;
-        
+
         private final boolean next;
         private long start;
 
         private SlideAnimation(boolean next) {
             this.next = next;
             start =  System.currentTimeMillis();
-            
+
             if (next) {
                 if (nextPicture < pictures.size()) {
                     nextTextImage = generateTextImage(pictures.get(nextPicture));
@@ -662,7 +665,7 @@ public class PictureViewer extends CompositeGLPanel {
 
                 setTextAlpha(elapsed, factor);
             }
-            
+
             repaint();
         }
 
@@ -670,35 +673,35 @@ public class PictureViewer extends CompositeGLPanel {
             Renderable quad = renderables[INDEX_SELECTED_PICTURE];
             Point3f position = quad.getPosition();
             quad.setPosition(-7.0f - QUAD_WIDTH * 2.0f * (float) factor, position.y, position.z);
-            
+
             ReflectedQuad reflected = (ReflectedQuad) renderables[INDEX_NEXT_PICTURE];
             if (reflected != null) {
                 float scale = 0.5f + 0.5f * (float) factor;
-      
+
                 reflected.setScale(scale, scale, scale);
                 reflected.setRotation(0, (int) (-20.0 + 50.0 * factor), 0);
                 reflected.setPosition((float) (36.0f - 43.0f * factor),
                                       -reflected.getHeight() * (1.0f - scale),
                                       (float) (30.0 * (1.0 - factor)));
             }
-            
+
             quad = renderables[INDEX_RIGHT_PICTURE];
             if (quad != null) {
                 position = quad.getPosition();
                 quad.setPosition(36.0f + 160.0f * (float) (1.0 - factor), position.y, position.z);
             }
         }
-        
+
         private void animateQuadsPrevious(double factor) {
             ReflectedQuad reflected = (ReflectedQuad) renderables[INDEX_SELECTED_PICTURE];
             float scale = 0.5f + 0.5f * (float) factor;
-  
+
             reflected.setScale(scale, scale, scale);
             reflected.setRotation(0, (int) (-20.0 + 50.0 * factor), 0);
             reflected.setPosition((float) (36.0f - 43.0f * factor),
                                   -reflected.getHeight() * (1.0f - scale),
                                   (float) (30.0 * (1.0 - factor)));
-            
+
             Renderable quad = renderables[INDEX_NEXT_PICTURE];
             if (quad != null) {
                 Point3f position = quad.getPosition();
@@ -734,25 +737,25 @@ public class PictureViewer extends CompositeGLPanel {
             if (renderables[INDEX_RIGHT_PICTURE] != null) {
                 disposeQuadsQueue.add(renderables[INDEX_RIGHT_PICTURE]);
             }
-            
+
             Renderable quad = renderables[INDEX_NEXT_PICTURE];
-            if (quad != null) { 
+            if (quad != null) {
                 renderables[INDEX_RIGHT_PICTURE] = quad;
                 quad.setScale(0.5f, 0.5f, 0.5f);
                 quad.setPosition(196.0f, -((ReflectedQuad) quad).getHeight() / 2.0f, 30.0f);
                 quad.setRotation(0, -20, 0);
             }
-            
+
             quad = renderables[INDEX_SELECTED_PICTURE];
             renderables[INDEX_NEXT_PICTURE] = quad;
-            
+
             nextTextImage = generateTextImage(pictures.get(nextPicture));
-            
+
             quad = renderables[INDEX_LEFT_PICTURE];
             renderables[INDEX_SELECTED_PICTURE] = quad;
-            
+
             textImage = generateTextImage(pictures.get(selectedPicture));
-            
+
             if (selectedPicture > 0) {
                 initQuadsQueue.add(createQuad(INDEX_LEFT_PICTURE, selectedPicture - 1));
             } else {
@@ -763,21 +766,21 @@ public class PictureViewer extends CompositeGLPanel {
         private void selectNextPicture() {
             selectedPicture++;
             nextPicture++;
-            
+
             if (renderables[INDEX_LEFT_PICTURE] != null) {
                 disposeQuadsQueue.add(renderables[INDEX_LEFT_PICTURE]);
             }
-            
+
             Renderable quad = renderables[INDEX_SELECTED_PICTURE];
             renderables[INDEX_LEFT_PICTURE] = quad;
             quad.setPosition(-7.0f - QUAD_WIDTH * 2.0f, 0.0f, 0.0f);
             quad.setRotation(0, 30, 0);
-            
+
             quad = renderables[INDEX_NEXT_PICTURE];
             renderables[INDEX_SELECTED_PICTURE] = quad;
-            
+
             textImage = generateTextImage(pictures.get(selectedPicture));
-            
+
             if (nextPicture < pictures.size()) {
                 quad = renderables[INDEX_RIGHT_PICTURE];
                 renderables[INDEX_NEXT_PICTURE] = quad;
@@ -785,7 +788,7 @@ public class PictureViewer extends CompositeGLPanel {
             } else {
                 renderables[INDEX_NEXT_PICTURE] = null;
             }
-            
+
             if (nextPicture < pictures.size() - 1) {
                 initQuadsQueue.add(createQuad(INDEX_RIGHT_PICTURE, nextPicture + 1));
             } else {
@@ -793,16 +796,16 @@ public class PictureViewer extends CompositeGLPanel {
             }
         }
     }
-    
+
     private final class NextPictureAction extends AbstractAction {
         public NextPictureAction() {
             super("Next");
             ImageIcon nextIconActive = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-next-button.png"));
             ImageIcon nextIconPressed = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-next-button-pressed.png"));
             ImageIcon disabledIcon = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-next-disabled-button.png"));
-            
+
             setEnabled(false);
-            
+
             putValue("disabledIcon", disabledIcon);
             putValue("pressedIcon", nextIconPressed);
             putValue(Action.LARGE_ICON_KEY, nextIconActive);
@@ -814,7 +817,7 @@ public class PictureViewer extends CompositeGLPanel {
             nextPicture();
         }
     }
-    
+
     private final class PreviousPictureAction extends AbstractAction {
         public PreviousPictureAction() {
             super("Previous");
@@ -823,7 +826,7 @@ public class PictureViewer extends CompositeGLPanel {
             ImageIcon disabledIcon = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-previous-disabled-button.png"));
 
             setEnabled(false);
-            
+
             putValue("disabledIcon", disabledIcon);
             putValue("pressedIcon", previousIconPressed);
             putValue(Action.LARGE_ICON_KEY, previousIconActive);
@@ -835,23 +838,23 @@ public class PictureViewer extends CompositeGLPanel {
             previousPicture();
         }
     }
-    
+
     private final class ShowPictureAction extends AbstractAction {
         private ImageIcon showIconActive;
         private ImageIcon showIconAll;
         private ImageIcon showIconPressed;
         private ImageIcon showIconAllPressed;
-        
+
         public ShowPictureAction() {
             super(pictureIsShowing ? "Show All" : "Show Picture");
-            
+
             showIconActive = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-show-button.png"));
             showIconPressed = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-show-button-pressed.png"));
             showIconAll = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-show-all-button.png"));
             showIconAllPressed = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-show-all-button-pressed.png"));
-            
+
             ImageIcon disabledIcon = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-show-disabled-button.png"));
-            
+
             setEnabled(false);
 
             putValue("disabledIcon", disabledIcon);
@@ -864,23 +867,23 @@ public class PictureViewer extends CompositeGLPanel {
         public void actionPerformed(ActionEvent e) {
             showSelectedPicture();
         }
-        
+
         public void toggleName() {
             putValue(Action.NAME, pictureIsShowing ? "Show All" : "Show Picture");
             putValue(Action.LARGE_ICON_KEY, pictureIsShowing ? showIconAll : showIconActive);
             putValue("pressedIcon", pictureIsShowing ? showIconAllPressed : showIconPressed);
         }
     }
-    
+
     private final class ControlButton extends JButton implements PropertyChangeListener {
         public ControlButton(Action action) {
             super(action);
 
             getAction().addPropertyChangeListener(this);
-            
+
             setPressedIcon((Icon) getAction().getValue("pressedIcon"));
             setDisabledIcon((Icon) getAction().getValue("disabledIcon"));
-            
+
             setForeground(grayColor);
             setFocusable(false);
             setFocusPainted(false);
@@ -891,7 +894,7 @@ public class PictureViewer extends CompositeGLPanel {
             setText("");
             setHideActionText(true);
         }
-        
+
         @Override
         public void setToolTipText(String text) {
         }
@@ -902,10 +905,10 @@ public class PictureViewer extends CompositeGLPanel {
             }
         }
     }
-    
+
     private static final class ControlPanel extends JPanel {
         private BufferedImage background;
-        
+
         public ControlPanel() {
             super(new FlowLayout(FlowLayout.CENTER, 2, 2));
             setOpaque(false);
@@ -923,10 +926,10 @@ public class PictureViewer extends CompositeGLPanel {
         private void createBackground() {
             background = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2 = background.createGraphics();
-            
+
             g2.setColor(Color.WHITE);
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
-            
+
             Insets insets = getInsets();
             RoundRectangle2D rect = new RoundRectangle2D.Double(insets.left, insets.top,
                                                                 getWidth() - insets.right - insets.left,
@@ -934,11 +937,11 @@ public class PictureViewer extends CompositeGLPanel {
                                                                 14, 14);
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.fill(rect);
-            
+
             g2.dispose();
         }
     }
-    
+
     private final class MouseWheelDriver implements MouseWheelListener {
         public void mouseWheelMoved(MouseWheelEvent e) {
             if (e.getWheelRotation() > 0) {

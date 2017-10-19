@@ -3,10 +3,12 @@ package org.progx.jogl;
 import java.awt.Graphics;
 
 import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLEventListener;
-import javax.media.opengl.GLJPanel;
+import javax.media.opengl.GLProfile;
+import javax.media.opengl.awt.GLJPanel;
 import javax.media.opengl.glu.GLU;
 
 /**
@@ -29,8 +31,8 @@ public class CompositeGLPanel extends GLJPanel implements GLEventListener {
     }
 
     private static GLCapabilities getCaps(boolean opaque) {
-        GLCapabilities caps = new GLCapabilities();
-        
+        GLCapabilities caps = new GLCapabilities(GLProfile.getDefault());
+
         if (!opaque) {
             caps.setAlphaBits(8);
         }
@@ -62,6 +64,7 @@ public class CompositeGLPanel extends GLJPanel implements GLEventListener {
     protected void render2DForeground(Graphics g) {
     }
 
+    @Override
     public void display(GLAutoDrawable drawable) {
         GL gl = drawable.getGL();
         int clearBits = 0;
@@ -77,14 +80,16 @@ public class CompositeGLPanel extends GLJPanel implements GLEventListener {
         render3DScene(gl, glu);
     }
 
-    public void reshape(GLAutoDrawable drawable,
-                        int x, int y, int width, int height) {
-        GL gl = drawable.getGL();
+    @Override
+    public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
+        GL2 gl = drawable.getGL().getGL2();
 
         if (!OPENGL_PIPELINE_WORK_AROUND) {
             gl.glViewport(0, 0, width, height);
         }
-        gl.glMatrixMode(GL.GL_PROJECTION);
+        // [1] gl.glMatrixMode(GL.GL_PROJECTION);
+        // [1] gl.glLoadIdentity();
+        gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
         if (hasDepth) {
             double aspectRatio = (double) width / (double) height;
@@ -95,11 +100,20 @@ public class CompositeGLPanel extends GLJPanel implements GLEventListener {
             //gl.glOrtho(0.0, width, height, 0.0, -100.0, 100.0);
         }
 
-        gl.glMatrixMode(GL.GL_MODELVIEW);
+        // [1] gl.glMatrixMode(GL.GL_MODELVIEW));
+        // [1] gl.glLoadIdentity();
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
     }
 
-    public void displayChanged(GLAutoDrawable drawable,
-                               boolean modeChanged, boolean deviceChanged) {
+    public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {
+        // Intentionally Empty?
     }
+
+    @Override
+    public void dispose(GLAutoDrawable glad) {
+        // Intentionally Empty?
+        // super.dispose(this.hasDepth); // << this does not work
+    }
+
 }

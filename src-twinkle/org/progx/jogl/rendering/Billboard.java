@@ -33,9 +33,9 @@ public class Billboard extends Renderable {
         Vector3f camPos = new Vector3f();
         Vector3f camUp = new Vector3f();
         GLUtilities.getCameraVectors(gl, camPos, camUp);
-        gl.glPushMatrix();
+        gl.getGL2().glPushMatrix();
         GLUtilities.renderBillboard(gl, camPos, camUp, item, antiAliased);
-        gl.glPopMatrix();
+        gl.getGL2().glPopMatrix();
     }
 
     public Point3f getPosition() {
@@ -48,14 +48,14 @@ public class Billboard extends Renderable {
         }
         item.setPosition(position);
     }
-    
+
     public void setPosition(float x, float y, float z) {
         if (item == null) {
             return;
         }
         item.setPosition(x, y, z);
     }
-    
+
     public void setPosition(float[] coordinates) {
         if (item == null) {
             return;

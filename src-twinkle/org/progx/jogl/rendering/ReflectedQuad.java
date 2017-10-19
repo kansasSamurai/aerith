@@ -2,6 +2,7 @@ package org.progx.jogl.rendering;
 import java.awt.image.BufferedImage;
 
 import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
 
 public class ReflectedQuad extends Quad {
     // reflection
@@ -13,7 +14,7 @@ public class ReflectedQuad extends Quad {
                          BufferedImage textureImage) {
         super(x, y, z, width, height, textureImage);
     }
-    
+
     public float getFadeDistance() {
         return fadeDistance;
     }
@@ -42,7 +43,7 @@ public class ReflectedQuad extends Quad {
         float ty1 = crop[1];
         float tx2 = crop[2];
         float ty2 = crop[3];
-        
+
         float x = -width / 2.0f;
         float y = -height / 2.0f;
         float z = 0.0f;
@@ -55,36 +56,36 @@ public class ReflectedQuad extends Quad {
         }
         gl.glEnable(GL.GL_TEXTURE_2D);
         texture.bind(gl);
-        gl.glTexEnvi(GL.GL_TEXTURE_ENV, GL.GL_TEXTURE_ENV_MODE, GL.GL_MODULATE);    
+        gl.getGL2().glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_MODULATE);
 
-        gl.glBegin(GL.GL_QUADS);
+        gl.getGL2().glBegin(GL2.GL_QUADS);
 
         // render solid/upright texture
-        gl.glColor4f(antiAliased ? 1 : alpha, antiAliased ? 1 : alpha, antiAliased ? 1 : alpha, alpha);
-        gl.glTexCoord2f(tx2, ty1);
-        gl.glVertex3f(x + width, y + height, z);
-        gl.glTexCoord2f(tx1, ty1);
-        gl.glVertex3f(x, y + height, z);
-        gl.glTexCoord2f(tx1, ty2);
-        gl.glVertex3f(x, y, z);
-        gl.glTexCoord2f(tx2, ty2);
-        gl.glVertex3f(x + width, y, z);
-        
-        alpha /= reflectionTransparency;
-        
-        gl.glColor4f(antiAliased ? 1 : alpha, antiAliased ? 1 : alpha, antiAliased ? 1 : alpha, alpha);
-        gl.glTexCoord2f(tx2, ty2);
-        gl.glVertex3f(x + width, y, z);
-        gl.glTexCoord2f(tx1, ty2);
-        gl.glVertex3f(x, y, z);
-        gl.glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
-        gl.glTexCoord2f(tx1, ty2 * (1 - fadeDistance));
-        gl.glVertex3f(x, y - (height * fadeDistance), z);
-        gl.glTexCoord2f(tx2, ty2 * (1 - fadeDistance));
-        gl.glVertex3f(x + width, y - (height * fadeDistance), z);
+        gl.getGL2().glColor4f(antiAliased ? 1 : alpha, antiAliased ? 1 : alpha, antiAliased ? 1 : alpha, alpha);
+        gl.getGL2().glTexCoord2f(tx2, ty1);
+        gl.getGL2().glVertex3f(x + width, y + height, z);
+        gl.getGL2().glTexCoord2f(tx1, ty1);
+        gl.getGL2().glVertex3f(x, y + height, z);
+        gl.getGL2().glTexCoord2f(tx1, ty2);
+        gl.getGL2().glVertex3f(x, y, z);
+        gl.getGL2().glTexCoord2f(tx2, ty2);
+        gl.getGL2().glVertex3f(x + width, y, z);
 
-        gl.glEnd();
-        
+        alpha /= reflectionTransparency;
+
+        gl.getGL2().glColor4f(antiAliased ? 1 : alpha, antiAliased ? 1 : alpha, antiAliased ? 1 : alpha, alpha);
+        gl.getGL2().glTexCoord2f(tx2, ty2);
+        gl.getGL2().glVertex3f(x + width, y, z);
+        gl.getGL2().glTexCoord2f(tx1, ty2);
+        gl.getGL2().glVertex3f(x, y, z);
+        gl.getGL2().glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
+        gl.getGL2().glTexCoord2f(tx1, ty2 * (1 - fadeDistance));
+        gl.getGL2().glVertex3f(x, y - (height * fadeDistance), z);
+        gl.getGL2().glTexCoord2f(tx2, ty2 * (1 - fadeDistance));
+        gl.getGL2().glVertex3f(x + width, y - (height * fadeDistance), z);
+
+        gl.getGL2().glEnd();
+
         gl.glDisable(GL.GL_TEXTURE_2D);
         //gl.glDisable(GL.GL_BLEND);
     }
