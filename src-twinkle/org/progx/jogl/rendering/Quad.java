@@ -8,7 +8,15 @@ import javax.media.opengl.GL2;
 
 import org.progx.jogl.Texture;
 
+/**
+ * Quad - A quadrilateral for rendering on 3D surfaces;
+ * includes properties for Textures, Alpha, etc.
+ *
+ * @author Rick Wellman
+ * @author aerith
+ */
 public class Quad extends Renderable {
+
     // texture
     protected BufferedImage textureImage = null;
     protected Texture texture = null;
@@ -72,17 +80,17 @@ public class Quad extends Renderable {
         this.textureCrop = textureCrop;
     }
 
-    public void init(GL gl) {
+    @Override public void init(GL gl) {
         texture = Texture.getInstance(gl, textureImage, true);
     }
 
-    public void dispose(GL gl) {
+    @Override public void dispose(GL gl) {
         texture.dispose(gl);
         textureImage = null;
     }
 
     // rendering
-    public void render(GL gl, boolean antiAliased) {
+    @Override public void render(GL gl, boolean antiAliased) {
         float[] crop = texture.getSubImageTextureCoords(textureCrop.x,
                                                         textureCrop.y,
                                                         textureCrop.x + textureCrop.width,
@@ -92,9 +100,9 @@ public class Quad extends Renderable {
         float tx2 = crop[2];
         float ty2 = crop[3];
 
-        float x = -width / 2.0f;
-        float y = -height / 2.0f;
-        float z = 0.0f;
+        float thisx = -width / 2.0f;
+        float thisy = -height / 2.0f;
+        float thisz = 0.0f;
 
         if (alpha < 1.0f) {
             gl.glEnable(GL.GL_BLEND);
@@ -113,13 +121,13 @@ public class Quad extends Renderable {
         // render solid/upright texture
         gl.getGL2().glColor4f(antiAliased ? 1 : alpha, antiAliased ? 1 : alpha, antiAliased ? 1 : alpha, alpha);
         gl.getGL2().glTexCoord2f(tx2, ty1);
-        gl.getGL2().glVertex3f(x + width, y + height, z);
+        gl.getGL2().glVertex3f(thisx + width, thisy + height, thisz);
         gl.getGL2().glTexCoord2f(tx1, ty1);
-        gl.getGL2().glVertex3f(x, y + height, z);
+        gl.getGL2().glVertex3f(thisx, thisy + height, thisz);
         gl.getGL2().glTexCoord2f(tx1, ty2);
-        gl.getGL2().glVertex3f(x, y, z);
+        gl.getGL2().glVertex3f(thisx, thisy, thisz);
         gl.getGL2().glTexCoord2f(tx2, ty2);
-        gl.getGL2().glVertex3f(x + width, y, z);
+        gl.getGL2().glVertex3f(thisx + width, thisy, thisz);
 
         gl.getGL2().glEnd();
 

@@ -59,71 +59,93 @@ import org.progx.math.equation.Equation;
 import org.progx.twinkle.Debug;
 import org.progx.twinkle.equation.AnimationEquation;
 
+/**
+ * PictureViewer
+ *
+ * @author Rick Wellman
+ * @author aerith
+ *
+ */
 public class PictureViewer extends CompositeGLPanel {
+
+    // Action Keys
+    public static final String KEY_ACTION_SHOW_PICTURE = "show";
     public static final String KEY_ACTION_NEXT_PICTURE = "next";
     public static final String KEY_ACTION_PREVIOUS_PICTURE = "previous";
-    public static final String KEY_ACTION_SHOW_PICTURE = "show";
 
-    private static boolean envAntiAliasing = true;
+    private static final boolean TWINKLE_ANTI_ALIAS = System.getProperty("twinkle.aa") == null;
     static {
-        envAntiAliasing = System.getProperty("twinkle.aa") == null;
-        System.out.println("[TWINKLE] Use anti aliasing: " + envAntiAliasing);
-    }
-    private static boolean envTransparent = true;
-    static {
-        envTransparent = System.getProperty("twinkle.transparent") != null;
-        System.out.println("[TWINKLE] Transparent: " + envTransparent);
+        System.out.println("[TWINKLE] Use anti aliasing: " + TWINKLE_ANTI_ALIAS);
     }
 
+    private static final boolean TWINKLE_TRANSPARENT = System.getProperty("twinkle.transparent") != null;
+    static {
+        System.out.println("[TWINKLE] Transparent: " + TWINKLE_TRANSPARENT);
+    }
+
+    // Quad Width
     private static final float QUAD_WIDTH = 65.0f;
 
+    // Thumbnails
     private static final int THUMB_WIDTH = 48;
     private static final double SELECTED_THUMB_RATIO = 0.35;
     private static final double SELECTED_THUMB_EXTRA_WIDTH = THUMB_WIDTH * SELECTED_THUMB_RATIO;
 
+    // Renderable
     private static final int INDEX_LEFT_PICTURE = 0;
     private static final int INDEX_SELECTED_PICTURE = 1;
     private static final int INDEX_NEXT_PICTURE = 2;
     private static final int INDEX_RIGHT_PICTURE = 3;
+    private final Renderable[] renderables = new Renderable[4];
+    private final Queue<Renderable> initQuadsQueue = new ConcurrentLinkedQueue<Renderable>();
+    private final Queue<Renderable> disposeQuadsQueue = new ConcurrentLinkedQueue<Renderable>();
 
-    private List<Picture> pictures = Collections.synchronizedList(new ArrayList<Picture>());
-    private Renderable[] renderables = new Renderable[4];
+    private final List<Picture> pictures = Collections.synchronizedList(new ArrayList<Picture>());
 
-    private Queue<Renderable> initQuadsQueue = new ConcurrentLinkedQueue<Renderable>();
-    private Queue<Renderable> disposeQuadsQueue = new ConcurrentLinkedQueue<Renderable>();
-
-    private float camPosX = 0.0f;
-    private float camPosY = 0.0f;
-    private float camPosZ = 100.0f;
+    private final float camPosX = 0.0f;
+    private final float camPosY = 0.0f;
+    private final float camPosZ = 100.0f;
 
     private int picturesStripHeight = 0;
 
     private BufferedImage textImage = null;
-    private BufferedImage nextTextImage = null;
-    private ShadowFactory shadowFactory = new ShadowFactory(11, 1.0f, Color.BLACK);
-    private Font textFont;
+    private BufferedImage nextTextImage = null; // small image that is next (none/null if last in album)
+    private final Font textFont;
     private float textAlpha = 1.0f;
-    private Color grayColor = new Color(0xE1E1E1);
+    private final Color grayColor = new Color(0xE1E1E1);
 
-    private int selectedPicture = -1;
-    private int nextPicture = -1;
+    private final ShadowFactory shadowFactory = new ShadowFactory(11, 1.0f, Color.BLACK);
+
+    // Index of selected picture
+    private int idxSelectedPicture = -1;
+
+    // Index of next picture
+    private int idxNextPicture = -1;
 
     private boolean pictureIsShowing = false;
-    private Equation curve = new AnimationEquation(2.8, -0.98);//3.6, -1.0);
+
+    // ... used for animation
+    private final Equation curve = new AnimationEquation(3.6, -1.0);
+    //(2.8, -0.98); // original; ok, but a little klunky
+    //(3.6, -1.0); // this is better
+    //(6.0, -2.0); // experimental; this is terrible
+
+    // A timer for animation sequences
     private Timer animator;
 
-    private boolean antiAliasing = envAntiAliasing;
+    private boolean antiAliasing = TWINKLE_ANTI_ALIAS;
+
     private boolean stopRendering;
 
     private final Object animLock = new Object();
 
     public PictureViewer() {
-        super(!envTransparent, /*true*/false);
-        setPreferredSize(new Dimension(640, 480));
+        super(!TWINKLE_TRANSPARENT, /*true*/false);
 
-        addMouseWheelListener(new MouseWheelDriver());
+        this.setPreferredSize(new Dimension(640, 480));
+        this.addMouseWheelListener(new MouseWheelDriver());
+        this.setFocusable(true);
 
-        setFocusable(true);
         registerActions();
 
         textFont = getFont().deriveFont(Font.BOLD, 32.0f);
@@ -136,55 +158,62 @@ public class PictureViewer extends CompositeGLPanel {
     }
 
     public void setAntiAliasing(boolean antiAliasing) {
-        this.antiAliasing = antiAliasing && envAntiAliasing;
+        this.antiAliasing = antiAliasing && TWINKLE_ANTI_ALIAS;
         repaint();
     }
 
     public void addPicture(final String name, final BufferedImage image) {
         SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                int size;
-                Picture picture = new Picture(name, image);
+            @Override public void run() {
+
+                final Picture picture = new Picture(name, image);
 
                 pictures.add(picture);
-                size = pictures.size();
-
+                final int size = pictures.size();
                 if (size == 1) {
                     initQuadsQueue.add(createQuad(INDEX_SELECTED_PICTURE, 0));
-                } else if (size - 1 == selectedPicture + 1) {
+                } else if (size - 1 == idxSelectedPicture + 1) {
                     initQuadsQueue.add(createQuad(INDEX_NEXT_PICTURE, 1));
-                } else if (size - 1 == nextPicture + 1) {
+                } else if (size - 1 == idxNextPicture + 1) {
                     initQuadsQueue.add(createQuad(INDEX_RIGHT_PICTURE, 2));
                 }
 
-                float ratio = picture.getRatio();
-                picturesStripHeight = Math.max(picturesStripHeight,
-                                              (int) (THUMB_WIDTH + SELECTED_THUMB_EXTRA_WIDTH / ratio));
+                final float ratio = picture.getRatio();
+                picturesStripHeight = Math.max(picturesStripHeight, (int) (THUMB_WIDTH + SELECTED_THUMB_EXTRA_WIDTH / ratio));
 
-                getActionMap().get(KEY_ACTION_SHOW_PICTURE).setEnabled(selectedPicture >= 0);
-                getActionMap().get(KEY_ACTION_NEXT_PICTURE).setEnabled(selectedPicture < size - 1);
-                getActionMap().get(KEY_ACTION_PREVIOUS_PICTURE).setEnabled(selectedPicture > 0);
+                getActionMap().get(KEY_ACTION_SHOW_PICTURE).setEnabled(idxSelectedPicture >= 0);
+                getActionMap().get(KEY_ACTION_NEXT_PICTURE).setEnabled(idxSelectedPicture < size - 1);
+                getActionMap().get(KEY_ACTION_PREVIOUS_PICTURE).setEnabled(idxSelectedPicture > 0);
+
+                repaint();
             }
         });
-        repaint();
+        // repaint(); // RW Q: Should this be here? I have commented out in the meantime
     }
 
     public void dispose() {
         stopRendering = true;
+        System.out.println("dispose()");
+
+        // dispose of quads queue
         for (Renderable renderable : renderables) {
             if (renderable != null) {
                 disposeQuadsQueue.add(renderable);
             }
         }
+
+        // dispose of pictures (and their buffered images)
         for (Picture picture : pictures) {
             picture.getImage().flush();
         }
         pictures.clear();
+
         repaint();
     }
 
     public void showSelectedPicture() {
         if (animator != null && animator.isRunning()) {
+            System.out.println("WARN: Animator is running");
             return;
         }
 
@@ -197,14 +226,13 @@ public class PictureViewer extends CompositeGLPanel {
 
     public void nextPicture() {
         int size = pictures.size() - 1;
-
-        if (selectedPicture < size) {
+        if (idxSelectedPicture < size) {
             showPicture(true);
         }
     }
 
     public void previousPicture() {
-        if (selectedPicture > 0) {
+        if (idxSelectedPicture > 0) {
             showPicture(false);
         }
     }
@@ -212,8 +240,8 @@ public class PictureViewer extends CompositeGLPanel {
     @Override
     public void init(GLAutoDrawable drawable) {
         super.init(drawable);
-        GL gl = drawable.getGL();
 
+        final GL gl = drawable.getGL();
         initQuads(gl);
     }
 
@@ -250,9 +278,9 @@ public class PictureViewer extends CompositeGLPanel {
     }
 
     private void createButtons() {
-        ControlButton button;
         ControlPanel buttonsPanel = new ControlPanel();
 
+        ControlButton button;
         button = new ControlButton(getActionMap().get(KEY_ACTION_PREVIOUS_PICTURE));
         buttonsPanel.add(button);
         button = new ControlButton(getActionMap().get(KEY_ACTION_SHOW_PICTURE));
@@ -285,14 +313,17 @@ public class PictureViewer extends CompositeGLPanel {
     }
 
     private void showPicture(final boolean next) {
+        System.out.println("showPicture() > " + next);
+
         if (animator != null && animator.isRunning()) {
+            System.out.println("WARN: Animator is running");
             return;
         }
 
         if (pictureIsShowing) {
             new Thread(new Runnable() {
                 /** @noinspection BusyWait*/
-                public void run() {
+                @Override public void run() {
                     showSelectedPicture();
                     while (animator.isRunning()) {
                         synchronized(animLock) {
@@ -314,7 +345,7 @@ public class PictureViewer extends CompositeGLPanel {
                         }
                     }
                     SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
+                        @Override public void run() {
                             showSelectedPicture();
                         }
                     });
@@ -323,13 +354,12 @@ public class PictureViewer extends CompositeGLPanel {
             return;
         }
 
-        animator = new Timer(10, new SlideAnimation(next));
+        animator = new Timer(1000 / 60, new SlideAnimation(next)); // 10 := original value
         animator.start();
     }
 
     private Renderable createQuad(int index, int pictureNumber) {
-        Picture picture = pictures.get(pictureNumber);
-
+        final Picture picture = pictures.get(pictureNumber);
         if (picture == null || index > renderables.length) {
             return null;
         }
@@ -342,39 +372,44 @@ public class PictureViewer extends CompositeGLPanel {
             width = (int) (height * ratio);
         }
 
-        Renderable quad = RenderableFactory.createReflectedQuad(0.0f, 0.0f, 0.0f,
+        final Renderable quad = RenderableFactory.createReflectedQuad(0.0f, 0.0f, 0.0f,
                                                                 width, height,
                                                                 picture.getImage(), null,
                                                                 picture.getName());
         renderables[index] = quad;
 
-        if (index == INDEX_SELECTED_PICTURE) {
-            selectedPicture = pictureNumber;
-
-            quad.setPosition(-7.0f, 0.0f, 0.0f);
-            quad.setRotation(0, 30, 0);
-
-            textImage = generateTextImage(picture);
-        } else if (index == INDEX_NEXT_PICTURE) {
-            nextPicture = pictureNumber;
-
-            quad.setScale(0.5f, 0.5f, 0.5f);
-            quad.setPosition(36.0f, -height / 2.0f, 30.0f);
-            quad.setRotation(0, -20, 0);
-        } else if (index == INDEX_RIGHT_PICTURE) {
-            quad.setScale(0.5f, 0.5f, 0.5f);
-            quad.setPosition(196.0f, -height / 2.0f, 30.0f);
-            quad.setRotation(0, -20, 0);
-        } else if (index == INDEX_LEFT_PICTURE) {
-            quad.setPosition(-7.0f - QUAD_WIDTH * 2.0f, 0.0f, 0.0f);
-            quad.setRotation(0, 30, 0);
+        switch (index) {
+            case INDEX_SELECTED_PICTURE:
+                idxSelectedPicture = pictureNumber;
+                quad.setPosition(-7.0f, 0.0f, 0.0f);
+                quad.setRotation(0, 30, 0);
+                textImage = generateTextImage(picture);
+                break;
+            case INDEX_NEXT_PICTURE:
+                idxNextPicture = pictureNumber;
+                quad.setScale(0.5f, 0.5f, 0.5f);
+                quad.setPosition(36.0f, -height / 2.0f, 30.0f);
+                quad.setRotation(0, -20, 0);
+                break;
+            case INDEX_RIGHT_PICTURE:
+                quad.setScale(0.5f, 0.5f, 0.5f);
+                quad.setPosition(196.0f, -height / 2.0f, 30.0f);
+                quad.setRotation(0, -20, 0);
+                break;
+            case INDEX_LEFT_PICTURE:
+                quad.setPosition(-7.0f - QUAD_WIDTH * 2.0f, 0.0f, 0.0f);
+                quad.setRotation(0, 30, 0);
+                break;
+            default:
+                break;
         }
 
         return quad;
     }
 
     private BufferedImage generateTextImage(Picture picture) {
-        FontRenderContext context = getFontMetrics(textFont).getFontRenderContext();
+
+        final FontRenderContext context = getFontMetrics(textFont).getFontRenderContext();
         //Graphics2D globalGraphics = (Graphics2D) getGraphics();
         //globalGraphics.setFont(textFont);
         //FontRenderContext context = (globalGraphics).getFontRenderContext();
@@ -391,8 +426,8 @@ public class PictureViewer extends CompositeGLPanel {
         layout.draw(g2, 0, layout.getAscent());
         g2.dispose();
 
-        BufferedImage shadow = shadowFactory.createShadow(image);
-        BufferedImage composite = new BufferedImage(shadow.getWidth(),
+        final BufferedImage shadow = shadowFactory.createShadow(image);
+        final BufferedImage composite = new BufferedImage(shadow.getWidth(),
                                                     shadow.getHeight(),
                                                     BufferedImage.TYPE_INT_ARGB);
         g2 = composite.createGraphics();
@@ -423,7 +458,7 @@ public class PictureViewer extends CompositeGLPanel {
 //            g2.setPaint(oldPaint);
 //        }
 
-        if (!envTransparent) {
+        if (!TWINKLE_TRANSPARENT) {
             g.setColor(Color.BLACK);
             Rectangle clip = g.getClipBounds();
             g.fillRect(clip.x, clip.y, clip.width, clip.height);
@@ -432,7 +467,7 @@ public class PictureViewer extends CompositeGLPanel {
 
     @Override
     protected void render2DForeground(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g;
+        final Graphics2D g2 = (Graphics2D) g;
         setupForegroundGraphics(g2);
 
         //paintPicturesStrip(g2);
@@ -465,7 +500,9 @@ public class PictureViewer extends CompositeGLPanel {
 
     @Override
     protected void render3DScene(final GL gl, final GLU glu) {
+        System.out.println("render3DScene()");
         if (stopRendering) {
+            System.out.println("render3DScene(), stopRendering");
             initAndDisposeQuads(gl);
             return;
         }
@@ -473,20 +510,17 @@ public class PictureViewer extends CompositeGLPanel {
         initScene(gl);
         initAndDisposeQuads(gl);
 
-        Renderable scene = new Renderable() {
-            @Override
-            public Point3f getPosition() {
+        final Renderable scene = new Renderable() {
+            @Override public Point3f getPosition() {
                 return null;
             }
 
-            @Override
-            public void render(GL gl, boolean antiAliased) {
+            @Override public void render(GL gl, boolean antiAliased) {
                 setupCamera(gl, glu);
                 renderItems(gl, antiAliased);
             }
 
-            @Override
-            public void init(GL gl) {
+            @Override public void init(GL gl) {
             }
         };
 
@@ -506,15 +540,17 @@ public class PictureViewer extends CompositeGLPanel {
     }
 
     private void initAndDisposeQuads(final GL gl) {
+        System.out.println("initAndDisposeQuads()");
+
         while (!initQuadsQueue.isEmpty()) {
-            Renderable quad = initQuadsQueue.poll();
+            final Renderable quad = initQuadsQueue.poll();
             if (quad != null) {
                 quad.init(gl);
             }
         }
 
         while (!disposeQuadsQueue.isEmpty()) {
-            Renderable quad = disposeQuadsQueue.poll();
+            final Renderable quad = disposeQuadsQueue.poll();
             if (quad != null) {
                 quad.dispose(gl);
             }
@@ -522,6 +558,7 @@ public class PictureViewer extends CompositeGLPanel {
     }
 
     private static void initScene(GL gl) {
+        System.out.println("initScene()");
         // [1] gl.glMatrixMode(GL.GL_MODELVIEW));
         // [1] gl.glLoadIdentity();
         gl.getGL2().glMatrixMode(GL2.GL_MODELVIEW);
@@ -546,30 +583,33 @@ public class PictureViewer extends CompositeGLPanel {
             return;
         }
 
-        Point3f pos = renderable.getPosition();
-        Point3i rot = renderable.getRotation();
-        Point3f scale = renderable.getScale();
+        final Point3f pos = renderable.getPosition();
+        final Point3i rot = renderable.getRotation();
+        final Point3f scale = renderable.getScale();
 
         gl.getGL2().glPushMatrix();
-        gl.getGL2().glScalef(scale.x, scale.y, scale.z);
-        gl.getGL2().glTranslatef(pos.x, pos.y + 4.0f, pos.z);
-        gl.getGL2().glRotatef(rot.x, 1.0f, 0.0f, 0.0f);
-        gl.getGL2().glRotatef(rot.y, 0.0f, 1.0f, 0.0f);
-        gl.getGL2().glRotatef(rot.z, 0.0f, 0.0f, 1.0f);
-
-        renderable.render(gl, antiAliased);
+            gl.getGL2().glScalef(scale.x, scale.y, scale.z);
+            gl.getGL2().glTranslatef(pos.x, pos.y + 4.0f, pos.z);
+            gl.getGL2().glRotatef(rot.x, 1.0f, 0.0f, 0.0f);
+            gl.getGL2().glRotatef(rot.y, 0.0f, 1.0f, 0.0f);
+            gl.getGL2().glRotatef(rot.z, 0.0f, 0.0f, 1.0f);
+            renderable.render(gl, antiAliased);
         gl.getGL2().glPopMatrix();
     }
 
     private final class ZoomAnimation implements ActionListener {
-        private static final int ANIM_DELAY = 400;
-        private long start;
+
+        private static final int ANIM_DELAY = 800 * 3; // 400 := original value
+
+        private final long start;
 
         private ZoomAnimation() {
             start = System.currentTimeMillis();
         }
 
-        public void actionPerformed(ActionEvent e) {
+        @Override public void actionPerformed(ActionEvent e) {
+            System.out.println("ZoomAnimation");
+
             long elapsed = System.currentTimeMillis() - start;
             if (elapsed >= ANIM_DELAY) {
                 Timer timer = (Timer) e.getSource();
@@ -588,6 +628,7 @@ public class PictureViewer extends CompositeGLPanel {
             if (!pictureIsShowing) {
                 factor = 1.0 - factor;
             }
+            System.out.println("animateQuads(), p > " + pictureIsShowing + " < factor > " + Double.toString(factor));
 
             Renderable quad = renderables[INDEX_SELECTED_PICTURE];
             Point3f position = quad.getPosition();
@@ -608,34 +649,38 @@ public class PictureViewer extends CompositeGLPanel {
     }
 
     private final class SlideAnimation implements ActionListener {
-        private static final int ANIM_DELAY = 800;
+
+        private static final int ANIM_DELAY = 800 * 10;
 
         private final boolean next;
-        private long start;
+
+        private final long start;
 
         private SlideAnimation(boolean next) {
             this.next = next;
-            start =  System.currentTimeMillis();
+            this.start =  System.currentTimeMillis();
 
             if (next) {
-                if (nextPicture < pictures.size()) {
-                    nextTextImage = generateTextImage(pictures.get(nextPicture));
+                if (idxNextPicture < pictures.size()) {
+                    nextTextImage = generateTextImage(pictures.get(idxNextPicture));
                 } else {
                     nextTextImage = null;
                 }
             } else {
-                if (selectedPicture > 0) {
-                    nextTextImage = generateTextImage(pictures.get(selectedPicture - 1));
+                if (idxSelectedPicture > 0) {
+                    nextTextImage = generateTextImage(pictures.get(idxSelectedPicture - 1));
                 } else {
                     nextTextImage = null;
                 }
             }
         }
 
-        public void actionPerformed(ActionEvent e) {
+        @Override public void actionPerformed(ActionEvent e) {
             long elapsed = System.currentTimeMillis() - start;
+            System.out.println("SlideAnimation");
+
             if (elapsed >= ANIM_DELAY) {
-                Timer timer = (Timer) e.getSource();
+                final Timer timer = (Timer) e.getSource();
                 timer.stop();
 
                 if (next) {
@@ -644,18 +689,19 @@ public class PictureViewer extends CompositeGLPanel {
                     selectPreviousPicture();
                 }
 
-                Action action = getActionMap().get(KEY_ACTION_NEXT_PICTURE);
-                action.setEnabled(selectedPicture < pictures.size() - 1);
+                Action action;
+                action = getActionMap().get(KEY_ACTION_NEXT_PICTURE);
+                action.setEnabled(idxSelectedPicture < pictures.size() - 1);
 
                 action = getActionMap().get(KEY_ACTION_PREVIOUS_PICTURE);
-                action.setEnabled(selectedPicture > 0 && pictures.size() > 1);
+                action.setEnabled(idxSelectedPicture > 0 && pictures.size() > 1);
 
                 synchronized (animLock) {
                     animLock.notifyAll();
                 }
             } else {
-                double factor = (double) elapsed / (double) ANIM_DELAY;
-                double curvedFactor = curve.compute(factor);
+                final double factor = (double) elapsed / (double) ANIM_DELAY;
+                final double curvedFactor = curve.compute(factor);
 
                 if (next) {
                     animateQuadsNext(curvedFactor);
@@ -670,13 +716,18 @@ public class PictureViewer extends CompositeGLPanel {
         }
 
         private void animateQuadsNext(double factor) {
-            Renderable quad = renderables[INDEX_SELECTED_PICTURE];
-            Point3f position = quad.getPosition();
+            System.out.println("AQN > " + Double.toString(factor));
+
+            Renderable quad;
+            Point3f position;
+
+            quad = renderables[INDEX_SELECTED_PICTURE];
+            position = quad.getPosition();
             quad.setPosition(-7.0f - QUAD_WIDTH * 2.0f * (float) factor, position.y, position.z);
 
-            ReflectedQuad reflected = (ReflectedQuad) renderables[INDEX_NEXT_PICTURE];
+            final ReflectedQuad reflected = (ReflectedQuad) renderables[INDEX_NEXT_PICTURE];
             if (reflected != null) {
-                float scale = 0.5f + 0.5f * (float) factor;
+                final float scale = 0.5f + 0.5f * (float) factor; // RW Q: Why 0.5f + 0.5f? Why not 1.0f?
 
                 reflected.setScale(scale, scale, scale);
                 reflected.setRotation(0, (int) (-20.0 + 50.0 * factor), 0);
@@ -693,16 +744,19 @@ public class PictureViewer extends CompositeGLPanel {
         }
 
         private void animateQuadsPrevious(double factor) {
-            ReflectedQuad reflected = (ReflectedQuad) renderables[INDEX_SELECTED_PICTURE];
-            float scale = 0.5f + 0.5f * (float) factor;
+            System.out.println("AQP > " + Double.toString(factor));
 
+            final float scale = 0.5f + 0.5f * (float) factor;
+
+            final ReflectedQuad reflected = (ReflectedQuad) renderables[INDEX_SELECTED_PICTURE];
             reflected.setScale(scale, scale, scale);
             reflected.setRotation(0, (int) (-20.0 + 50.0 * factor), 0);
             reflected.setPosition((float) (36.0f - 43.0f * factor),
                                   -reflected.getHeight() * (1.0f - scale),
                                   (float) (30.0 * (1.0 - factor)));
 
-            Renderable quad = renderables[INDEX_NEXT_PICTURE];
+            Renderable quad;
+            quad = renderables[INDEX_NEXT_PICTURE];
             if (quad != null) {
                 Point3f position = quad.getPosition();
                 quad.setPosition(36.0f + 160.0f * (float) (1.0 - factor), position.y, position.z);
@@ -731,14 +785,15 @@ public class PictureViewer extends CompositeGLPanel {
         }
 
         private void selectPreviousPicture() {
-            selectedPicture--;
-            nextPicture--;
+            idxSelectedPicture--;
+            idxNextPicture--;
 
             if (renderables[INDEX_RIGHT_PICTURE] != null) {
                 disposeQuadsQueue.add(renderables[INDEX_RIGHT_PICTURE]);
             }
 
-            Renderable quad = renderables[INDEX_NEXT_PICTURE];
+            Renderable quad;
+            quad = renderables[INDEX_NEXT_PICTURE];
             if (quad != null) {
                 renderables[INDEX_RIGHT_PICTURE] = quad;
                 quad.setScale(0.5f, 0.5f, 0.5f);
@@ -749,48 +804,49 @@ public class PictureViewer extends CompositeGLPanel {
             quad = renderables[INDEX_SELECTED_PICTURE];
             renderables[INDEX_NEXT_PICTURE] = quad;
 
-            nextTextImage = generateTextImage(pictures.get(nextPicture));
+            nextTextImage = generateTextImage(pictures.get(idxNextPicture));
 
             quad = renderables[INDEX_LEFT_PICTURE];
             renderables[INDEX_SELECTED_PICTURE] = quad;
 
-            textImage = generateTextImage(pictures.get(selectedPicture));
+            textImage = generateTextImage(pictures.get(idxSelectedPicture));
 
-            if (selectedPicture > 0) {
-                initQuadsQueue.add(createQuad(INDEX_LEFT_PICTURE, selectedPicture - 1));
+            if (idxSelectedPicture > 0) {
+                initQuadsQueue.add(createQuad(INDEX_LEFT_PICTURE, idxSelectedPicture - 1));
             } else {
                 renderables[INDEX_LEFT_PICTURE] = null;
             }
         }
 
         private void selectNextPicture() {
-            selectedPicture++;
-            nextPicture++;
+            idxSelectedPicture++;
+            idxNextPicture++;
 
             if (renderables[INDEX_LEFT_PICTURE] != null) {
                 disposeQuadsQueue.add(renderables[INDEX_LEFT_PICTURE]);
             }
 
-            Renderable quad = renderables[INDEX_SELECTED_PICTURE];
-            renderables[INDEX_LEFT_PICTURE] = quad;
+            Renderable quad;
+            quad = renderables[INDEX_SELECTED_PICTURE];
             quad.setPosition(-7.0f - QUAD_WIDTH * 2.0f, 0.0f, 0.0f);
             quad.setRotation(0, 30, 0);
+            renderables[INDEX_LEFT_PICTURE] = quad;
 
             quad = renderables[INDEX_NEXT_PICTURE];
             renderables[INDEX_SELECTED_PICTURE] = quad;
 
-            textImage = generateTextImage(pictures.get(selectedPicture));
+            textImage = generateTextImage(pictures.get(idxSelectedPicture));
 
-            if (nextPicture < pictures.size()) {
+            if (idxNextPicture < pictures.size()) {
                 quad = renderables[INDEX_RIGHT_PICTURE];
                 renderables[INDEX_NEXT_PICTURE] = quad;
-                nextTextImage = generateTextImage(pictures.get(nextPicture));
+                nextTextImage = generateTextImage(pictures.get(idxNextPicture));
             } else {
                 renderables[INDEX_NEXT_PICTURE] = null;
             }
 
-            if (nextPicture < pictures.size() - 1) {
-                initQuadsQueue.add(createQuad(INDEX_RIGHT_PICTURE, nextPicture + 1));
+            if (idxNextPicture < pictures.size() - 1) {
+                initQuadsQueue.add(createQuad(INDEX_RIGHT_PICTURE, idxNextPicture + 1));
             } else {
                 renderables[INDEX_RIGHT_PICTURE] = null;
             }
@@ -813,6 +869,7 @@ public class PictureViewer extends CompositeGLPanel {
             putValue(Action.SHORT_DESCRIPTION, "Show next picture");
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             nextPicture();
         }
@@ -834,16 +891,17 @@ public class PictureViewer extends CompositeGLPanel {
             putValue(Action.SHORT_DESCRIPTION, "Show previous picture");
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             previousPicture();
         }
     }
 
     private final class ShowPictureAction extends AbstractAction {
-        private ImageIcon showIconActive;
-        private ImageIcon showIconAll;
-        private ImageIcon showIconPressed;
-        private ImageIcon showIconAllPressed;
+        private final ImageIcon showIconActive;
+        private final ImageIcon showIconAll;
+        private final ImageIcon showIconPressed;
+        private final ImageIcon showIconAllPressed;
 
         public ShowPictureAction() {
             super(pictureIsShowing ? "Show All" : "Show Picture");
@@ -853,10 +911,9 @@ public class PictureViewer extends CompositeGLPanel {
             showIconAll = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-show-all-button.png"));
             showIconAllPressed = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-show-all-button-pressed.png"));
 
-            ImageIcon disabledIcon = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-show-disabled-button.png"));
-
             setEnabled(false);
 
+            final ImageIcon disabledIcon = new ImageIcon(PictureViewer.class.getResource("images/pictureviewer-show-disabled-button.png"));
             putValue("disabledIcon", disabledIcon);
             putValue("pressedIcon", pictureIsShowing ? showIconAllPressed : showIconPressed);
             putValue(Action.LARGE_ICON_KEY, pictureIsShowing ? showIconAll : showIconActive);
@@ -864,6 +921,7 @@ public class PictureViewer extends CompositeGLPanel {
             putValue(Action.SHORT_DESCRIPTION, "Show selected picture");
         }
 
+        @Override
         public void actionPerformed(ActionEvent e) {
             showSelectedPicture();
         }
@@ -873,32 +931,35 @@ public class PictureViewer extends CompositeGLPanel {
             putValue(Action.LARGE_ICON_KEY, pictureIsShowing ? showIconAll : showIconActive);
             putValue("pressedIcon", pictureIsShowing ? showIconAllPressed : showIconPressed);
         }
+
     }
 
     private final class ControlButton extends JButton implements PropertyChangeListener {
         public ControlButton(Action action) {
             super(action);
-
             getAction().addPropertyChangeListener(this);
 
             setPressedIcon((Icon) getAction().getValue("pressedIcon"));
             setDisabledIcon((Icon) getAction().getValue("disabledIcon"));
+            setRolloverIcon((Icon) getAction().getValue("disabledIcon"));
 
             setForeground(grayColor);
             setFocusable(false);
             setFocusPainted(false);
             setBorderPainted(false);
             setContentAreaFilled(false);
-            setOpaque(false);
+            // setOpaque(false); // possibly transparent (depending on paint())
+            // ^^ current swing javadocs say to not set this if setting setContentAreaFilled() to false
             setMargin(new Insets(0, 0, 0, 0));
-            setText("");
-            setHideActionText(true);
+            setText(""); // no text
+            setHideActionText(true); // no text
         }
 
         @Override
         public void setToolTipText(String text) {
         }
 
+        @Override
         public void propertyChange(PropertyChangeEvent evt) {
             if ("pressedIcon".equals(evt.getPropertyName())) {
                 setPressedIcon((Icon) evt.getNewValue());
@@ -924,26 +985,27 @@ public class PictureViewer extends CompositeGLPanel {
         }
 
         private void createBackground() {
-            background = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2 = background.createGraphics();
+            System.out.println("createBackground()");
 
+            background = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
+
+            final Insets insets = getInsets();
+            final RoundRectangle2D rect = new RoundRectangle2D.Double(
+                    insets.left, insets.top,
+                    getWidth() - insets.right - insets.left,
+                    getHeight() - insets.bottom - insets.top,
+                    14, 14);
+
+            final Graphics2D g2 = background.createGraphics(); {
             g2.setColor(Color.WHITE);
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
-
-            Insets insets = getInsets();
-            RoundRectangle2D rect = new RoundRectangle2D.Double(insets.left, insets.top,
-                                                                getWidth() - insets.right - insets.left,
-                                                                getHeight() - insets.bottom - insets.top,
-                                                                14, 14);
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.fill(rect);
-
-            g2.dispose();
+            g2.fill(rect); } g2.dispose();
         }
     }
 
     private final class MouseWheelDriver implements MouseWheelListener {
-        public void mouseWheelMoved(MouseWheelEvent e) {
+        @Override public void mouseWheelMoved(MouseWheelEvent e) {
             if (e.getWheelRotation() > 0) {
                 nextPicture();
             } else {

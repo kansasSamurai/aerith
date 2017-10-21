@@ -32,7 +32,9 @@ import org.jdesktop.fuse.ResourceInjector;
 import com.sun.javaone.aerith.g2d.GraphicsUtil;
 
 /**
+ * ActionButton
  *
+ * @author Rick Wellman
  * @author rbair
  */
 public class ActionButton extends JButton {
@@ -46,8 +48,7 @@ public class ActionButton extends JButton {
     private int shadowDirection;
 
     @InjectedResource()
-    private Image mainButton, mainButtonPressed,
-                  normalButton, normalButtonPressed, buttonHighlight;
+    private Image mainButton, mainButtonPressed, normalButton, normalButtonPressed, buttonHighlight;
     @InjectedResource
     private int shadowDistance;
     @InjectedResource
@@ -137,9 +138,8 @@ public class ActionButton extends JButton {
 
     @Override
     protected void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g;
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
+        final Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         ButtonModel m = getModel();
         Insets insets = getInsets();
@@ -150,35 +150,24 @@ public class ActionButton extends JButton {
         GraphicsUtil.tileStretchPaint(g2,this,(BufferedImage) getImage(m.isArmed()), sourceInsets);
 
         if (ghostValue > 0.0f) {
-            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                    RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
             float alphaValue = ghostValue;
-            Composite composite = g2.getComposite();
-            if (composite instanceof AlphaComposite) {
-                alphaValue *= ((AlphaComposite) composite).getAlpha();
-            }
-
-            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
-                    alphaValue));
-
-            g2.drawImage(buttonHighlight,
-                    insets.left + 2, insets.top + 2,
-                    width - 4, height - 4, null);
-            g2.setComposite(composite);
+            final Composite composite = g2.getComposite(); {
+                if (composite instanceof AlphaComposite) {
+                    alphaValue *= ((AlphaComposite) composite).getAlpha();
+                }
+                g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphaValue));
+                g2.drawImage(buttonHighlight, insets.left + 2, insets.top + 2, width - 4, height - 4, null);
+            } g2.setComposite(composite);
         }
 
-        FontMetrics fm = getFontMetrics(getFont());
-        TextLayout layout = new TextLayout(getText(),
-                getFont(),
-                g2.getFontRenderContext());
-        Rectangle2D bounds = layout.getBounds();
+        final FontMetrics fm = getFontMetrics(getFont());
+        final TextLayout layout = new TextLayout(getText(), getFont(), g2.getFontRenderContext());
+        final Rectangle2D bounds = layout.getBounds();
 
-        int x = (int) (getWidth() - insets.left - insets.right -
-                bounds.getWidth()) / 2;
-        //x -= 2;
-        int y = (getHeight() - insets.top - insets.bottom -
-                 fm.getMaxAscent() - fm.getMaxDescent()) / 2;
+        int x = (int) (getWidth() - insets.left - insets.right - bounds.getWidth()) / 2; //x -= 2;
+        int y = (getHeight() - insets.top - insets.bottom - fm.getMaxAscent() - fm.getMaxDescent()) / 2;
         y += fm.getAscent() - 1;
 
         if (m.isArmed()) {
@@ -186,10 +175,11 @@ public class ActionButton extends JButton {
             y += 1;
         }
 
+        // Draw Shadow
         g2.setColor(shadowColor);
-        layout.draw(g2,
-                x + (int) Math.ceil(shadowOffsetX),
-                y + (int) Math.ceil(shadowOffsetY));
+        layout.draw(g2, x + (int) Math.ceil(shadowOffsetX), y + (int) Math.ceil(shadowOffsetY));
+
+        // Draw Text (Foreground)
         g2.setColor(getForeground());
         layout.draw(g2, x, y);
     }

@@ -1,5 +1,6 @@
 package com.sun.javaone.aerith.ui;
 
+import com.flickr4java.flickr.FlickrException;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -21,36 +22,47 @@ import com.sun.javaone.aerith.model.FlickrService;
 import com.sun.javaone.aerith.model.Trip;
 import com.sun.javaone.aerith.model.flickr.Catalog;
 import com.sun.javaone.aerith.util.Bundles;
+import java.util.concurrent.ExecutionException;
 import org.jdesktop.fuse.ResourceInjector;
 import org.jdesktop.fuse.TypeLoaderFactory;
 import org.jdesktop.fuse.swing.SwingModule;
 import org.jdesktop.swingx.util.SwingWorker;
 import org.progx.twinkle.ui.PictureViewer;
 
+/**
+ * TransitionManager
+ *
+ * @author Rick Wellman
+ * @author aerith
+ */
 public class TransitionManager {
+
     // TODO: CHANGE THIS @#!
     private static final String FLICKR_USER_ID = "romainguy";
 
     static boolean ready = false;
+
     static final Object LOCK = new Object();
 
     private static MainFrame mainFrame;
     private static NavigationHeader navPanel;
     private static TransitionPanel transPanel;
 
+    // Thread Pool (static *might* cause issues if this is somehow not a singleton class)
+    private static final ExecutorService service = Executors.newFixedThreadPool(4);
+
     private TransitionManager() {
     }
 
     /**
-     * Creates the main application frame.  Should be called from the
-     * EDT only.
+     * Creates the main application frame.  Should be called from the EDT only.
+     *
+     * @return
      */
     public static MainFrame createMainFrame() {
         ResourceInjector.addModule(new SwingModule());
-        ResourceInjector.get().load(MainFrame.class,
-                                    "/resources/" +
-                                    DataType.PHOTOS.toString().toLowerCase() +
-                                    ".uitheme");
+        ResourceInjector.get().load(MainFrame.class, "/resources/" + DataType.PHOTOS.toString().toLowerCase() + ".uitheme");
+
         TypeLoaderFactory.addTypeLoader(new LinearGradientTypeLoader());
 
         navPanel = new NavigationHeader();
@@ -145,20 +157,23 @@ public class TransitionManager {
 
     private static void populateSlideshow(final Photoset album) {
         final PictureViewer viewer = transPanel.getSlideshowPanel();
-        final ExecutorService service = Executors.newFixedThreadPool(4);
         final PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
 
         new Thread(new Runnable() {
-            public void run() {
-                PhotoList photos;
+            @Override public void run() {
+                final PhotoList photos;
                 try {
+                    // Retrieves up to 10 photos // pie in the sky; maybe make this dynamic
                     photos = photosetsInterface.getPhotos(album.getId(),10,1);
+                } catch (FlickrException e) {
+                    e.printStackTrace();
+                    return;
                 } catch (Exception e) {
+                    e.printStackTrace();
                     return;
                 }
-
-                int perPage = photos.getPerPage();
-                for (int i = 0; i < perPage; i++) {
+                int howMany = Math.min( photos.getPerPage(), photos.getTotal());
+                for (int i = 0; i < howMany; i++) {
                     Photo photo = (Photo) photos.get(i);
                     service.execute(new PictureLoader(viewer, photo));
                 }
@@ -166,14 +181,19 @@ public class TransitionManager {
         }).start();
     }
 
+    /**
+     * Loads pictures on the EDT
+     */
     public static class PictureLoader implements Runnable {
-        private static boolean useLargePicture = false;
+
+        private static final boolean USE_LARGE_PICTURE = System.getProperty("athena.largePictures") != null;
+
         static {
-            useLargePicture = System.getProperty("athena.largePictures") != null;
-            System.out.println("[ATHENA] Use large picture: " + useLargePicture);
+            System.out.println("[ATHENA] Use large picture: " + USE_LARGE_PICTURE);
         }
 
         private final PictureViewer viewer;
+
         private final Photo photo;
 
         public PictureLoader(PictureViewer viewer, Photo photo) {
@@ -181,11 +201,13 @@ public class TransitionManager {
             this.photo = photo;
         }
 
+        @Override
         public void run() {
             try {
-                BufferedImage image = ImageIO.read(new URL(useLargePicture ?
-                                                           photo.getLargeUrl() :
-                                                           photo.getMediumUrl()));
+                final URL url = new URL(USE_LARGE_PICTURE ? photo.getLargeUrl() : photo.getMediumUrl());
+                System.out.println("Downloading > " + url.toExternalForm() + " < ...");
+                final BufferedImage image = ImageIO.read(url);
+                System.out.println(".. finished > " + url.toExternalForm());
                 if (image != null) {
                     viewer.addPicture(photo.getTitle(), image);
                 }
@@ -195,11 +217,17 @@ public class TransitionManager {
         }
     }
 
+    /**
+     *
+     */
     private static class CatalogLoader extends SwingWorker<Catalog, Object> {
-        private String userid;
+
+        private final String userid;
+
         public CatalogLoader(String userId) {
             this.userid = userId;
         }
+
         @SuppressWarnings("unchecked")
         @Override
         public Catalog doInBackground() {
@@ -211,7 +239,7 @@ public class TransitionManager {
             try {
                 TransitionManager.showMainScreen(get());
                 new Thread(new Runnable() {
-                    public void run() {
+                    @Override public void run() {
                         while (!TransitionManager.ready) {
                             synchronized(LOCK) {
                                 try {
@@ -222,13 +250,13 @@ public class TransitionManager {
                             }
                         }
                         SwingUtilities.invokeLater(new Runnable() {
-                            public void run() {
+                            @Override public void run() {
                                 TransitionManager.hideWaitOverlay();
                             }
                         });
                     }
                 }).start();
-            } catch (Exception ignore) {
+            } catch (InterruptedException | ExecutionException ignore) {
                 ignore.printStackTrace();
             }
         }

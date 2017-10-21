@@ -1,5 +1,6 @@
 package com.sun.javaone.aerith.ui;
 
+import com.flickr4java.flickr.FlickrException;
 import java.awt.AlphaComposite;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -86,13 +87,13 @@ class TripReportPanel extends JPanel {
 
     public void setTrip(Trip t) {
         if (t == null) {
-            final Trip trip = new Trip();
+            final Trip varTrip = new Trip();
 //            Runnable r = new Runnable() {
 //                public void run() {
         ///////////////FOR TESTING -- must be removed soon
-                    trip.setName("My Trip Name");
-                    trip.setSummary("My Trip Summary");
-                    trip.setTitle("My Trip Title");
+                    varTrip.setName("My Trip Name");
+                    varTrip.setSummary("My Trip Summary");
+                    varTrip.setTitle("My Trip Title");
 
 // FOR TRIP RECONSTRUCTION PURPOSE
 //            Trip myTrip = null;
@@ -115,16 +116,18 @@ class TripReportPanel extends JPanel {
                         final PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
                         final PhotoList photos = photosetsInterface.getPhotos("72057594067354711",10,1);
                         for (Object obj : photos) {
-                            Photo photo = (Photo)obj;
-                            PhotoWrapper wrap = new PhotoWrapper(photo);
-                            trip.addPhoto(wrap);
+                            final Photo photo = (Photo)obj;
+                            final PhotoWrapper wrap = new PhotoWrapper(photo);
+                            varTrip.addPhoto(wrap);
                         }
+                    } catch (FlickrException e) {
+                        e.printStackTrace();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
 //                }
 //            };
-            t = trip;
+            t = varTrip;
 //            new Thread(r).start();
         }
         this.trip = t;

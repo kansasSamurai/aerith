@@ -29,9 +29,10 @@ public class Catalog {
 
     public void addUsers(User... list) {
         for (User user : list) {
-            System.out.println("adding user: " + user);
+            System.out.println("Adding user > " + user.getUsername() + " < id > " + user.getId());
             users.add(user);
         }
+        System.out.println("Catalog UserList size > " + users.size());
     }
 
     public User[] getUsers() {

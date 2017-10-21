@@ -1,19 +1,19 @@
 /*
- * 
+ *
  * Copyright 2001-2004 The Apache Software Foundation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  */
 
 package com.sun.javaone.aerith.g2d;
@@ -53,12 +53,12 @@ public class GraphicsUtil {
     public static BufferedImage createTranslucentCompatibleImage(int width, int height) {
         return configuration.createCompatibleImage(width, height, Transparency.TRANSLUCENT);
     }
-    
+
     public static BufferedImage loadCompatibleImage(URL resource) throws IOException {
         BufferedImage image = ImageIO.read(resource);
         return toCompatibleImage(image);
     }
-    
+
     public static BufferedImage toCompatibleImage(BufferedImage image) {
         BufferedImage compatibleImage = configuration.createCompatibleImage(image.getWidth(),
                 image.getHeight(), Transparency.TRANSLUCENT);
@@ -67,18 +67,18 @@ public class GraphicsUtil {
         g.dispose();
         return compatibleImage;
     }
-    
+
     public static BufferedImage createThumbnail(BufferedImage image, int requestedThumbSize) {
         float ratio = (float) image.getWidth() / (float) image.getHeight();
         int width = image.getWidth();
         BufferedImage thumb = image;
-        
+
         do {
             width /= 2;
             if (width < requestedThumbSize) {
                 width = requestedThumbSize;
             }
-            
+
             BufferedImage temp = new BufferedImage(width, (int) (width / ratio), BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2 = temp.createGraphics();
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
@@ -88,15 +88,19 @@ public class GraphicsUtil {
 
             thumb = temp;
         } while (width != requestedThumbSize);
-        
+
         return thumb;
     }
-    
+
     public static BufferedImage createThumbnail(BufferedImage image, int newWidth, int newHeight) {
-        int width = image.getWidth();
-        int height = image.getHeight();
+        int width = image.getWidth(); System.out.println("Width,  orig/new > " + width + " < > " + newWidth);
+        int height = image.getHeight(); System.out.println("Height, orig/new > " + height + " < > " + newHeight);
+
+        // If image is already "thumbnail size", simply return.
+        if (width < newWidth && height < newHeight) return image;
+
+        // Start with the original image; resize until thumbnail is created.
         BufferedImage thumb = image;
-        
         do {
             if (width > newWidth) {
                 width /= 2;
@@ -104,31 +108,33 @@ public class GraphicsUtil {
                     width = newWidth;
                 }
             }
-            
+
             if (height > newHeight) {
                 height /= 2;
                 if (height < newHeight) {
                     height = newHeight;
                 }
             }
-            
-            BufferedImage temp = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2 = temp.createGraphics();
-            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+            final BufferedImage temp = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            final Graphics2D g2 = temp.createGraphics();
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             g2.drawImage(thumb, 0, 0, temp.getWidth(), temp.getHeight(), null);
             g2.dispose();
 
+            // Point the current thumb to the new buffered image(temp)
             thumb = temp;
+
+            System.out.println(" > " + width + " < > " + newWidth + " < > " + height + " < > " + newHeight);
         } while (width != newWidth || height != newHeight);
-        
+
         return thumb;
     }
-    
+
     /**
      * Create a new ColorModel with it's alpha premultiplied state matching
      * newAlphaPreMult.
-     * 
+     *
      * @param cm
      *            The ColorModel to change the alpha premult state of.
      * @param newAlphaPreMult
@@ -151,7 +157,7 @@ public class GraphicsUtil {
     /**
      * Coerces data within a bufferedImage to match newAlphaPreMult, Note that
      * this can not change the colormodel of bi so you
-     * 
+     *
      * @param wr
      *            The raster to change the state of.
      * @param cm
@@ -448,83 +454,83 @@ public class GraphicsUtil {
             }
         }
     }
-    
-    public static String getColorHexString(Color c) { 
-        String colString = Integer.toHexString(c.getRGB() & 0xffffff); 
-        return "#000000".substring(0, 7 - colString.length()).concat(colString); 
-    }     
+
+    public static String getColorHexString(Color c) {
+        String colString = Integer.toHexString(c.getRGB() & 0xffffff);
+        return "#000000".substring(0, 7 - colString.length()).concat(colString);
+    }
 
     /**
      * Draws an image on top of a component by doing a 3x3 grid stretch of the image
      * using the specified insets.
      */
-    public static void tileStretchPaint(Graphics g, 
+    public static void tileStretchPaint(Graphics g,
                 JComponent comp,
                 BufferedImage img,
                 Insets ins) {
-        
+
         int left = ins.left;
         int right = ins.right;
         int top = ins.top;
         int bottom = ins.bottom;
-        
+
         // top
         g.drawImage(img,
                     0,0,left,top,
                     0,0,left,top,
                     null);
         g.drawImage(img,
-                    left,                 0, 
-                    comp.getWidth() - right, top, 
-                    left,                 0, 
-                    img.getWidth()  - right, top, 
+                    left,                 0,
+                    comp.getWidth() - right, top,
+                    left,                 0,
+                    img.getWidth()  - right, top,
                     null);
         g.drawImage(img,
-                    comp.getWidth() - right, 0, 
-                    comp.getWidth(),         top, 
-                    img.getWidth()  - right, 0, 
-                    img.getWidth(),          top, 
+                    comp.getWidth() - right, 0,
+                    comp.getWidth(),         top,
+                    img.getWidth()  - right, 0,
+                    img.getWidth(),          top,
                     null);
 
         // middle
         g.drawImage(img,
-                    0,    top, 
+                    0,    top,
                     left, comp.getHeight()-bottom,
-                    0,    top,   
+                    0,    top,
                     left, img.getHeight()-bottom,
                     null);
-        
+
         g.drawImage(img,
-                    left,                  top, 
+                    left,                  top,
                     comp.getWidth()-right,      comp.getHeight()-bottom,
-                    left,                  top,   
+                    left,                  top,
                     img.getWidth()-right,  img.getHeight()-bottom,
                     null);
-         
+
         g.drawImage(img,
-                    comp.getWidth()-right,     top, 
+                    comp.getWidth()-right,     top,
                     comp.getWidth(),           comp.getHeight()-bottom,
-                    img.getWidth()-right, top,   
+                    img.getWidth()-right, top,
                     img.getWidth(),       img.getHeight()-bottom,
                     null);
-        
+
         // bottom
         g.drawImage(img,
-                    0,comp.getHeight()-bottom, 
+                    0,comp.getHeight()-bottom,
                     left, comp.getHeight(),
-                    0,img.getHeight()-bottom,   
+                    0,img.getHeight()-bottom,
                     left,img.getHeight(),
                     null);
         g.drawImage(img,
-                    left,                    comp.getHeight()-bottom, 
+                    left,                    comp.getHeight()-bottom,
                     comp.getWidth()-right,        comp.getHeight(),
-                    left,                    img.getHeight()-bottom,   
+                    left,                    img.getHeight()-bottom,
                     img.getWidth()-right,    img.getHeight(),
                     null);
         g.drawImage(img,
-                    comp.getWidth()-right,     comp.getHeight()-bottom, 
+                    comp.getWidth()-right,     comp.getHeight()-bottom,
                     comp.getWidth(),           comp.getHeight(),
-                    img.getWidth()-right, img.getHeight()-bottom,   
+                    img.getWidth()-right, img.getHeight()-bottom,
                     img.getWidth(),       img.getHeight(),
                     null);
     }

@@ -60,10 +60,14 @@ import com.sun.javaone.aerith.ui.plaf.AerithScrollbarUI;
 import com.sun.javaone.aerith.ui.plaf.AerithSliderUI;
 
 /**
+ * TripEditPanel.java
+ * Created on March 30, 2006, 8:07 PM
  *
- * @author  jm158417
+ * @author Rick Wellman
+ * @author jm158417
  */
 public class TripEditPanel extends javax.swing.JPanel {
+
     public static Image LOADING;
     static {
         try {
@@ -81,16 +85,17 @@ public class TripEditPanel extends javax.swing.JPanel {
     @SuppressWarnings("unchecked")
     public TripEditPanel() {
         trip = new Trip();
+
         initComponents();
+
         mapViewer.addPropertyChangeListener("zoom",new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent evt) {
+            @Override public void propertyChange(PropertyChangeEvent evt) {
                 zoomSlider.setValue(15 - (Integer)evt.getNewValue());
             }
         });
-        
+
         mapViewer.setLoadingImage(LOADING);
-        
-        
+
         mapViewer.setFactory(new DefaultTileFactory(new TileProviderInfo(0,7,9,
             256, true, true, // tile size is 256 and x/y orientation is normal
             "http://mapwow.com/gmap/zoom",
@@ -102,7 +107,7 @@ public class TripEditPanel extends javax.swing.JPanel {
                 }
         }));
         mapViewer.setZoom(6);
-        
+
         zoomSlider.setUI(new AerithSliderUI());
 
         imageList.setOpaque(false);
@@ -195,7 +200,7 @@ public class TripEditPanel extends javax.swing.JPanel {
                 public void timingEvent(float f) {
                     panel.repaint();
                 }
-                public void repeat() {                	
+                public void repeat() {
                 }
             });
             enterController.setAcceleration(0.7f);
@@ -218,7 +223,7 @@ public class TripEditPanel extends javax.swing.JPanel {
             if (enterController != null && enterController.isRunning()) {
                 enterController.stop();
             }
-            
+
             exitController = PropertySetter.createAnimator(400, panel, "alpha", panel.getAlpha(), originalOpacity);
             exitController.addTarget(new TimingTarget() {
                 public void begin() {
@@ -524,7 +529,6 @@ public class TripEditPanel extends javax.swing.JPanel {
             mapViewer.setAddressLocation(geo);
             mapViewer.setZoom(1);
         } catch (IOException ex) {
-            System.out.println(ex);
             ex.printStackTrace();
         }
     }//GEN-LAST:event_findAddressFieldActionPerformed
@@ -537,20 +541,21 @@ public class TripEditPanel extends javax.swing.JPanel {
 
             final MapOverlay<JXMapViewer> oldOverlay = (MapOverlay<JXMapViewer>) mapViewer.getMapOverlay();
             mapViewer.setMapOverlay(new ZoomingMapOverlay(mapViewer,-1));
-            Animator enterController = PropertySetter.createAnimator(500, mapViewer, "zoomScale", mapViewer.getZoomScale(),2.0f);
+
+            final Animator enterController = PropertySetter.createAnimator(500, mapViewer, "zoomScale", mapViewer.getZoomScale(),2.0f);
             enterController.addTarget(new TimingTarget() {
-                public void begin() {
+                @Override public void begin() {
                 }
-                public void end() {
+                @Override public void end() {
                     zoomSlider.setValue(zoomSlider.getValue() + 1);
                     mapViewer.setZoomScale(1f);
                     mapViewer.setMapOverlay(oldOverlay);
                     mapViewer.repaint();
                 }
-                public void timingEvent(float f) {
+                @Override public void timingEvent(float f) {
                     mapViewer.repaint();
                 }
-                public void repeat() {                	
+                @Override public void repeat() {
                 }
             });
             enterController.start();
@@ -609,43 +614,44 @@ public class TripEditPanel extends javax.swing.JPanel {
             //mapViewer.setZoomDirection(+1);
             final MapOverlay<JXMapViewer> oldOverlay = (MapOverlay<JXMapViewer>) mapViewer.getMapOverlay();
             mapViewer.setMapOverlay(new ZoomingMapOverlay(mapViewer,+1));
-            Animator enterController = PropertySetter.createAnimator(500, mapViewer, "zoomScale", mapViewer.getZoomScale(), 0.5f);
+
+            final Animator enterController = PropertySetter.createAnimator(500, mapViewer, "zoomScale", mapViewer.getZoomScale(), 0.5f);
             enterController.addTarget(new TimingTarget() {
-                public void begin() {
+                @Override public void begin() {
                 }
-                public void end() {
+                @Override public void end() {
                     zoomSlider.setValue(zoomSlider.getValue() - 1);
                     mapViewer.setZoomScale(1f);
                     mapViewer.setMapOverlay(oldOverlay);
                     mapViewer.repaint();
                 }
-                public void timingEvent(float f) {
+                @Override public void timingEvent(float f) {
                     mapViewer.repaint();
                 }
-                public void repeat() {                	
+                @Override public void repeat() {
                 }
             });
             enterController.start();
-            
+
         }
     }//GEN-LAST:event_zoomOutActionPerformed
-    
+
     private void panActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_panActionPerformed
         mapViewer.setPanEnabled(pan.isSelected());
     }//GEN-LAST:event_panActionPerformed
-    
+
     private void drawActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_drawActionPerformed
         mapViewer.setPanEnabled(pan.isSelected());
     }//GEN-LAST:event_drawActionPerformed
-    
+
     private void addActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addActionPerformed
         mapViewer.setPanEnabled(pan.isSelected());
     }//GEN-LAST:event_addActionPerformed
-    
+
     private void zoomSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_zoomSliderStateChanged
         mapViewer.setZoom(15 - zoomSlider.getValue());
     }//GEN-LAST:event_zoomSliderStateChanged
-    
+
     public static void main(String[] args) throws Exception {
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         JFrame frame = new JFrame("Map Editor Test");
@@ -657,7 +663,7 @@ public class TripEditPanel extends javax.swing.JPanel {
         frame.setVisible(true);
     }
 
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     protected javax.swing.JToggleButton add;
     javax.swing.JToggleButton draw;
@@ -675,81 +681,81 @@ public class TripEditPanel extends javax.swing.JPanel {
     private javax.swing.JButton zoomOut;
     private javax.swing.JSlider zoomSlider;
     // End of variables declaration//GEN-END:variables
-    
-   
+
+
     private static final class CompoundMapOverlay<T extends JXMapViewer> implements MapOverlay<T> {
         private MapOverlay<T>[] overlays;
-        
+
         public CompoundMapOverlay(MapOverlay<T>... overlays) {
             this.overlays = overlays;
         }
-        
+
         public void paint(Graphics2D g, T map) {
             for (MapOverlay<T> overlay : overlays) {
                 overlay.paint(g, map);
             }
         }
-        
+
         public void mouseClicked(MouseEvent e) {
             for (MapOverlay<T> overlay : overlays) {
                 overlay.mouseClicked(e);
             }
         }
-        
+
         public void mousePressed(MouseEvent e) {
             for (MapOverlay<T> overlay : overlays) {
                 overlay.mousePressed(e);
             }
         }
-        
+
         public void mouseReleased(MouseEvent e) {
             for (MapOverlay<T> overlay : overlays) {
                 overlay.mouseReleased(e);
             }
         }
-        
+
         public void mouseEntered(MouseEvent e) {
             for (MapOverlay<T> overlay : overlays) {
                 overlay.mouseEntered(e);
             }
         }
-        
+
         public void mouseExited(MouseEvent e) {
             for (MapOverlay<T> overlay : overlays) {
                 overlay.mouseExited(e);
             }
         }
-        
+
         public void mouseDragged(MouseEvent e) {
             for (MapOverlay<T> overlay : overlays) {
                 overlay.mouseDragged(e);
             }
         }
-        
+
         public void mouseMoved(MouseEvent e) {
             for (MapOverlay<T> overlay : overlays) {
                 overlay.mouseMoved(e);
             }
         }
     }
-    
+
     private class PhotoListModel extends AbstractListModel {
         public PhotoListModel() {
         }
-        
+
         public Object getElementAt(int index) {
             return trip.getPhoto(index);
         }
-        
+
         public int getSize() {
             return trip == null ? 0 : trip.getPhotoCount();
         }
-        
+
         public void fireContentsChanged() {
             fireContentsChanged(this, 0, getSize());
         }
     }
-    
+
     private final class TripLoadingListener implements PropertyChangeListener {
         public void propertyChange(PropertyChangeEvent evt) {
             photoListModel.fireContentsChanged();
@@ -757,13 +763,14 @@ public class TripEditPanel extends javax.swing.JPanel {
     }
 
     private class TravelBackToOrigin implements ActionListener {
-        private boolean isInitialized;
-        private long start;
 
-        private Point startPoint;
-        private Point endPoint;
-        private GhostGlassPane glassPane;
-        
+        private long start;
+        private boolean isInitialized;
+
+        private final Point startPoint;
+        private final Point endPoint;
+        private final GhostGlassPane glassPane;
+
         private static final double INITIAL_SPEED = 500.0;
         private static final double INITIAL_ACCELERATION = 6000.0;
 
@@ -773,24 +780,25 @@ public class TripEditPanel extends javax.swing.JPanel {
             this.endPoint = end;
             isInitialized = false;
         }
-        
+
+        @Override
         public void actionPerformed(ActionEvent e) {
             if (!isInitialized) {
                 isInitialized = true;
                 start = System.currentTimeMillis();
             }
-            
-            long elapsed = System.currentTimeMillis() - start;
+
+            final long elapsed = System.currentTimeMillis() - start;
             double time = (double) elapsed / 1000.0;
 
             double a = (endPoint.y - startPoint.y) / (double) (endPoint.x - startPoint.x);
             double b = endPoint.y - a * endPoint.x;
-            
+
             int travelX = (int) (INITIAL_ACCELERATION * time * time * 0.5 + INITIAL_SPEED * time);
             if (startPoint.x > endPoint.x) {
                 travelX = -travelX;
             }
-            
+
             int travelY = (int) ((startPoint.x + travelX) * a + b);
             int distanceX = Math.abs(startPoint.x - endPoint.x);
 
@@ -799,26 +807,24 @@ public class TripEditPanel extends javax.swing.JPanel {
 
                 glassPane.setPoint(endPoint);
                 glassPane.repaint(glassPane.getRepaintRect());
-                
+
                 SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
+                    @Override public void run() {
                         glassPane.setImage(null);
                         glassPane.setVisible(false);
                     }
                 });
                 DragAndDropLock.setLocked(false);
-                
+
                 return;
             }
-            
-            glassPane.setPoint(new Point(startPoint.x + travelX,
-                                         travelY));
-            
+
+            glassPane.setPoint(new Point(startPoint.x + travelX, travelY));
             glassPane.repaint(glassPane.getRepaintRect());
         }
     }
 
-    
+
     private Point dragStartPoint = null;
     private class PhotoDragGestureListener implements DragGestureListener {
 
@@ -829,7 +835,7 @@ public class TripEditPanel extends javax.swing.JPanel {
             }
             DragAndDropLock.setLocked(true);
             DragAndDropLock.setDragAndDropStarted(true);
-            dge.startDrag(Cursor.getDefaultCursor(), 
+            dge.startDrag(Cursor.getDefaultCursor(),
                     new PhotoWrapperTransferable((PhotoWrapper) TripEditPanel.this.imageList.getSelectedValue()));
             GhostGlassPane glassPane = new GhostGlassPane();
             ((JFrame) SwingUtilities.windowForComponent(TripEditPanel.this)).setGlassPane(glassPane);
@@ -860,7 +866,7 @@ public class TripEditPanel extends javax.swing.JPanel {
             GhostGlassPane glassPane = (GhostGlassPane) SwingUtilities.getRootPane(TripEditPanel.this.imageList).getGlassPane();
             Point p = (Point) dsde.getLocation().clone();
             SwingUtilities.convertPointFromScreen(p, glassPane);
-            
+
             if (!dsde.getDropSuccess()) {
                 // do failure animation back to source of the drag
                 /*
@@ -924,7 +930,7 @@ public class TripEditPanel extends javax.swing.JPanel {
             g3.setClip(new Rectangle(0,0,map.getWidth(),map.getHeight()));
             map.paintComponent(g3);
             map.setZoom(map.getZoom()-direction);
-            
+
         }
         public void mouseClicked(MouseEvent e) {
         }
@@ -942,7 +948,7 @@ public class TripEditPanel extends javax.swing.JPanel {
         }
         public void paint(Graphics2D g, JXMapViewer map) {
             //System.out.println("painting overlay at: " + map.getZoomScale());
-            
+
             float tx = map.getWidth()/2;
             float ty = map.getHeight()/2;
             float s1 = map.getZoomScale();
@@ -954,11 +960,11 @@ public class TripEditPanel extends javax.swing.JPanel {
                 a1 = 1-a2;
                 s2 = 2*s1;
             }
-            
+
             Graphics2D g2 = (Graphics2D)g.create();
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                 RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            
+
             g2.translate(tx,ty);
             g2.scale(s1,s1);
             g2.translate(-tx,-ty);
@@ -966,13 +972,13 @@ public class TripEditPanel extends javax.swing.JPanel {
             g2.translate(tx,ty);
             g2.scale(1/s1,1/s1);
             g2.translate(-tx,-ty);
-            
+
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,a1));
             g2.translate(tx,ty);
             g2.scale(s2,s2);
             g2.translate(-tx,-ty);
             g2.drawImage(end,0,0,null);
-            
+
         }
     }
 }

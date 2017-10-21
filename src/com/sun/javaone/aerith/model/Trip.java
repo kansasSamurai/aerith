@@ -25,10 +25,13 @@ import org.jdesktop.swingx.mapviewer.DefaultWaypoint;
 import org.jdesktop.swingx.mapviewer.GeoPosition;
 
 /**
+ * Trip
  *
+ * @author Rick Wellman
  * @author rbair
  */
 public class Trip extends JavaBean {
+
     private String name;
     private String summary;
     private String title;
@@ -36,8 +39,11 @@ public class Trip extends JavaBean {
     private List<PhotoWrapper> photos;
     private List<Waypoint> waypoints;
     private PropertyChangeListener imageListener;
-    private GeneralPath path; //all values within this GP are stored between 0...1 so that
-                              //I can scale according to the zoom level, and such
+    private GeneralPath path; // [1]
+
+    // =============== Footnotes ====================
+    // [1] All values within this GP are stored between 0...1 so that
+    // I can scale according to the zoom level, and such.
 
 
     /** Creates a new instance of Trip */

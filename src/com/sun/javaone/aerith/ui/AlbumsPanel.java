@@ -13,8 +13,16 @@ import com.sun.javaone.aerith.util.Bundles;
 import org.jdesktop.fuse.ResourceInjector;
 import org.jdesktop.swingx.util.SwingWorker;
 
+/**
+ * AlbumsPanel
+ *
+ * @author Rick Wellman
+ * @author aerith
+ */
 class AlbumsPanel extends JPanel {
+
     private final BackgroundTitle backgroundTitle;
+
     private final AlbumSelector albumSelector;
 
     AlbumsPanel() {
@@ -23,20 +31,18 @@ class AlbumsPanel extends JPanel {
         setOpaque(false);
         setLayout(new BorderLayout());
 
-        backgroundTitle = new BackgroundTitle(
-                    Bundles.getMessage(getClass(), "TXT_SelectAlbum", ""));
+        albumSelector = new AlbumSelector();
+        backgroundTitle = new BackgroundTitle(Bundles.getMessage(getClass(), "TXT_SelectAlbum", ""));
+
         add(BorderLayout.NORTH, backgroundTitle);
         add(BorderLayout.WEST, Box.createHorizontalStrut(60));
-        albumSelector = new AlbumSelector();
         add(BorderLayout.CENTER, albumSelector);
         add(BorderLayout.SOUTH, Box.createVerticalStrut(18));
         add(BorderLayout.EAST, Box.createHorizontalStrut(60));
     }
 
     void setContact(User contact) {
-        backgroundTitle.setText(Bundles.getMessage(getClass(),
-                                                   "TXT_SelectAlbum",
-                                                   contact.getUsername()));
+        backgroundTitle.setText(Bundles.getMessage(getClass(), "TXT_SelectAlbum", contact.getUsername()));
         new AlbumsFetcher(contact).execute();
     }
 
@@ -61,8 +67,8 @@ class AlbumsPanel extends JPanel {
                 for (Photoset set : get()) {
                     albumSelector.addAlbum(set);
                 }
-            } catch (InterruptedException e) {
-            } catch (ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
             }
             albumSelector.defaultSelection();
         }

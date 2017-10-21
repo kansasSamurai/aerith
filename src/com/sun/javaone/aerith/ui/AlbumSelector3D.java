@@ -43,18 +43,24 @@ import com.sun.javaone.aerith.math.GaussianEquation;
 import org.jdesktop.fuse.InjectedResource;
 import org.jdesktop.fuse.ResourceInjector;
 
+/**
+ * AlbumSelector3D
+ *
+ * @author Rick Wellman
+ * @author aerith
+ */
 class AlbumSelector3D extends JPanel {
+
     private static final int ITEM_SIZE = 75;
 
     private static final int DISPLAY_WIDTH = ITEM_SIZE;
     private static final int DISPLAY_HEIGHT = (int) (ITEM_SIZE * 5.0 / 3.0);
     private static final int VERTICAL_OFFSET = (int) (DISPLAY_HEIGHT / 4.0);
 
-    private List<Photoset> albums = Collections.synchronizedList(new ArrayList<Photoset>());
-    private List<BufferedImage> avatars = Collections.synchronizedList(new ArrayList<BufferedImage>());
-
-    private List<BufferedImage> textImages = new ArrayList<BufferedImage>();
-    private List<Point2D> textPositions = new ArrayList<Point2D>();
+    private final List<Photoset> albums = Collections.synchronizedList(new ArrayList<Photoset>());
+    private final List<BufferedImage> avatars = Collections.synchronizedList(new ArrayList<BufferedImage>());
+    private final List<BufferedImage> textImages = new ArrayList<BufferedImage>();
+    private final List<Point2D> textPositions = new ArrayList<Point2D>();
     private int textImageIndex = -1;
 
     private boolean loadingDone = false;
@@ -69,8 +75,8 @@ class AlbumSelector3D extends JPanel {
     private double avatarPosition = 0.0;
     private double otherAvatarPosition = 0.0;
     private double verticalModifier = 0.0;
-    private double avatarSpacing = 0.30;
-    private GaussianEquation gaussian = new GaussianEquation(0.5);
+    private final double avatarSpacing = 0.30;
+    private final GaussianEquation gaussian = new GaussianEquation(0.5);
 
     private boolean damaged = true;
 
@@ -82,6 +88,7 @@ class AlbumSelector3D extends JPanel {
     private final MouseListener avatarScroller;
 
     private float shadowOffsetX;
+
     private float shadowOffsetY;
 
     private boolean mouseOutside = true;
@@ -89,32 +96,41 @@ class AlbumSelector3D extends JPanel {
     ////////////////////////////////////////////////////////////////////////////
     // THEME SPECIFIC FIELDS
     ////////////////////////////////////////////////////////////////////////////
+
     /** @noinspection UNUSED_SYMBOL*/
     @InjectedResource
     private Font textFont;
+
     /** @noinspection UNUSED_SYMBOL*/
     @InjectedResource
     private Color textColor;
+
     /** @noinspection UNUSED_SYMBOL*/
     @InjectedResource
     private float shadowOpacity;
+
     /** @noinspection UNUSED_SYMBOL*/
     @InjectedResource
     private Color shadowColor;
+
     /** @noinspection UNUSED_SYMBOL*/
     @InjectedResource
     private int shadowDistance;
+
     /** @noinspection UNUSED_SYMBOL*/
     @InjectedResource
     private int shadowDirection;
 
+
     AlbumSelector3D() {
+
         ResourceInjector.get().inject(this);
 
-        GridBagLayout layout = new GridBagLayout();
-        setLayout(layout);
+        final GridBagLayout layout = new GridBagLayout();
+        this.setLayout(layout);
 
-        setSigma(0.08);
+        this.setSigma(0.08);
+
         computeShadow();
 
         addComponentListener(new DamageManager());
@@ -136,10 +152,9 @@ class AlbumSelector3D extends JPanel {
     }
 
     protected void fireActionPerformed() {
-        ActionEvent event = new ActionEvent(this, ActionEvent.ACTION_PERFORMED,
-                                            "album_selected");
+        final ActionEvent event = new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "album_selected");
 
-        Object[] listeners = listenerList.getListenerList();
+        final Object[] listeners = listenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i] == ActionListener.class) {
                 ((ActionListener) listeners[i + 1]).actionPerformed(event);
@@ -155,22 +170,28 @@ class AlbumSelector3D extends JPanel {
         return albums.get(selectedAvatarIndex);
     }
 
+    /**
+     *
+     * @param album
+     * @return
+     */
     boolean addAlbum(final Photoset album) {
-        if(album == null)
-            return false;
+        if (album == null) return false;
+
         try {
             BufferedImage image = album.getPrimaryPhoto().getSmallSquareImage();
             if (image.getWidth() != DISPLAY_WIDTH) {
                 image = GraphicsUtil.createThumbnail(image, DISPLAY_WIDTH);
             }
-            BufferedImage mask = Reflection.createGradientMask(image.getWidth(),
-                                                               image.getHeight());
+
+            BufferedImage mask = Reflection.createGradientMask(image.getWidth(), image.getHeight());
             image = Reflection.createReflectedPicture(image, mask);
 
             albums.add(album);
             avatars.add(image);
             textImages.add(null);
             textPositions.add(new Point2D.Double());
+
         } catch (IOException e) {
             return false;
         }

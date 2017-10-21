@@ -21,6 +21,9 @@ import com.flickr4java.flickr.people.User;
 import com.flickr4java.flickr.people.PeopleInterface;
 import com.sun.javaone.aerith.model.flickr.Catalog;
 import com.sun.javaone.aerith.ui.PhotoWrapper;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jdesktop.swingx.mapviewer.GeoPosition;
 
 /**
@@ -74,14 +77,22 @@ public class DataManager {
         return xml;
     }
 
-    public static Trip deserializeTrip(String xml) throws Exception {
-        final ByteArrayInputStream in = new ByteArrayInputStream(xml.getBytes());
-            final XMLDecoder decoder = new XMLDecoder(in);
+    public static Trip deserializeTrip(String xml) throws IOException {
+        ByteArrayInputStream in = null;
+        XMLDecoder decoder = null;
+        try {
+            in = new ByteArrayInputStream(xml.getBytes());
+            decoder = new XMLDecoder(in);
             final Trip t = (Trip)decoder.readObject();
-            decoder.close();
-        in.close();
 
-        return t;
+            return t;
+        } catch (Exception ex) {
+            Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            if (decoder != null) decoder.close();
+            if (in != null) in.close();
+        }
+        return null;
     }
 
     public static final class GeoPositionDelegate extends DefaultPersistenceDelegate {

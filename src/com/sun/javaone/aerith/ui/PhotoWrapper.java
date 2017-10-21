@@ -11,9 +11,12 @@ import javax.swing.ImageIcon;
 
 import com.flickr4java.flickr.photos.Photo;
 import com.sun.javaone.aerith.g2d.GraphicsUtil;
+import java.io.IOException;
 
 /**
+ * PhotoWrapper
  *
+ * @author Rick Wellman
  * @author aerith
  */
 public class PhotoWrapper implements Runnable {
@@ -36,11 +39,11 @@ public class PhotoWrapper implements Runnable {
 
     private Photo flickrPhoto;
 
-    private boolean smallSquareImageLoaded = false;
     private BufferedImage smallSquareImage = null;
+    private boolean smallSquareImageLoaded = false;
 
-    private boolean imageLoaded = false;
     private BufferedImage image = null;
+    private boolean imageLoaded = false;
 
     private Icon icon;
 
@@ -61,18 +64,26 @@ public class PhotoWrapper implements Runnable {
         try {
             smallSquareImage = GraphicsUtil.toCompatibleImage(getFlickrPhoto().getSmallSquareImage());
             smallSquareImageLoaded = true;
-
-            final BufferedImage scaled = GraphicsUtil.createThumbnail(smallSquareImage, ICONSIZE_2);
-            icon = new ImageIcon(scaled);
-
-            imageLoaded = true;
-            image = GraphicsUtil.toCompatibleImage(getFlickrPhoto().getSmallImage());
-
             support.firePropertyChange("smallSquareImageLoaded", false, true);
-            //support.firePropertyChange("imageLoaded", false, true);
+        } catch (IOException ex) {
+            ex.printStackTrace();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+
+        final BufferedImage scaled = GraphicsUtil.createThumbnail(smallSquareImage, ICONSIZE_2);
+        icon = new ImageIcon(scaled);
+
+        try {
+            image = GraphicsUtil.toCompatibleImage(getFlickrPhoto().getSmallImage());
+            imageLoaded = true;
+            support.firePropertyChange("imageLoaded", false, true);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
     }
 
     public Icon getIcon() {

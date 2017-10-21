@@ -104,12 +104,12 @@ class LobbyPanel extends JPanel {
     }
 
     private JPanel buildTopPicksPanel() {
-        JPanel randomPicks = new JPanel(new BorderLayout());
-        randomPicks.setOpaque(false);
-        randomPicks.add(BorderLayout.NORTH, new BackgroundTitle(
-            Bundles.getMessage(getClass(), "TXT_RandomPicks")));
         albumSelector = new AlbumSelector3D();
         albumSelector.addActionListener(new ShowAlbumHandler());
+
+        final JPanel randomPicks = new JPanel(new BorderLayout());
+        randomPicks.setOpaque(false);
+        randomPicks.add(BorderLayout.NORTH, new BackgroundTitle(Bundles.getMessage(getClass(), "TXT_RandomPicks")));
         randomPicks.add(BorderLayout.CENTER, albumSelector);
         randomPicks.add(BorderLayout.WEST, Box.createHorizontalStrut(60));
         randomPicks.add(BorderLayout.EAST, Box.createHorizontalStrut(60));
@@ -127,8 +127,8 @@ class LobbyPanel extends JPanel {
     }
 
     void setRandomPicks(final Photoset[] picks) {
-        Thread addAlbums = new Thread(new Runnable() {
-            public void run() {
+        final Thread addAlbums = new Thread(new Runnable() {
+            @Override public void run() {
                 albumSelector.removeAllAlbums();
                 for (Photoset photoset : picks) {
                     albumSelector.addAlbum(photoset);
@@ -192,7 +192,7 @@ class LobbyPanel extends JPanel {
                                                new Insets(0, 0, 0, (counter + 1) % 2 != 0 ? 30 : 0),
                                                0, 0));
         button.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+            @Override public void actionPerformed(ActionEvent e) {
                 TransitionManager.showLoginOverlay(true);
             }
         });
@@ -223,10 +223,9 @@ class LobbyPanel extends JPanel {
             this.description = description;
             this.imageName = imageName;
 
-            setFocusable(false);
-
             setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
 
+            setFocusable(false);
             setOpaque(false);
             setContentAreaFilled(false);
             setFocusPainted(false);
@@ -271,8 +270,7 @@ class LobbyPanel extends JPanel {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            BufferedImage mask = Reflection.createGradientMask(image.getWidth(),
-                                                               image.getHeight());
+            final BufferedImage mask = Reflection.createGradientMask(image.getWidth(), image.getHeight());
             this.image = Reflection.createReflectedPicture(image, mask);
         }
 
@@ -321,7 +319,7 @@ class LobbyPanel extends JPanel {
                 return;
             }
 
-            Graphics2D g2 = (Graphics2D) g;
+            final Graphics2D g2 = (Graphics2D) g;
             setupGraphics(g2);
 
             float y = paintText(g2);
@@ -432,24 +430,26 @@ class LobbyPanel extends JPanel {
         }
 
         private final class AnimateGhost implements TimingTarget {
-            public void timingEvent(float fraction) {
+            @Override public void timingEvent(float fraction) {
                 ghostValue = fraction;
                 repaint();
             }
 
-            public void begin() {
+            @Override public void begin() {
                 ghostValue = 0.0f;
             }
 
-            public void end() {
+            @Override public void end() {
                 ghostValue = 0.0f;
                 repaint();
             }
-            public void repeat() {
+
+            @Override public void repeat() {
             }
         }
 
         private final class HiglightHandler extends MouseMotionAdapter implements MouseListener {
+
             private Animator timer;
 
             @Override
@@ -473,36 +473,37 @@ class LobbyPanel extends JPanel {
                 }
             }
 
-            public void mouseClicked(MouseEvent e) {
+            @Override public void mouseClicked(MouseEvent e) {
             }
 
-            public void mousePressed(MouseEvent e) {
+            @Override public void mousePressed(MouseEvent e) {
             }
 
-            public void mouseReleased(MouseEvent e) {
+            @Override public void mouseReleased(MouseEvent e) {
             }
 
-            public void mouseEntered(MouseEvent e) {
+            @Override public void mouseEntered(MouseEvent e) {
                 mouseEnter = false;
             }
 
-            public void mouseExited(MouseEvent e) {
+            @Override public void mouseExited(MouseEvent e) {
             }
         }
 
         private final class AnimateHighlight implements TimingTarget {
-            private boolean forward;
-            private float oldValue;
+
+            private final boolean forward;
+            private final float oldValue;
 
             AnimateHighlight(boolean forward) {
                 this.forward = forward;
                 oldValue = newFraction;
             }
 
-            public void repeat() {
+            @Override public void repeat() {
             }
 
-            public void timingEvent(float fraction) {
+            @Override public void timingEvent(float fraction) {
                 newFraction = oldValue + fraction * (forward ? 1.0f : -1.0f);
 
                 if (newFraction > 1.0f) {
@@ -518,29 +519,29 @@ class LobbyPanel extends JPanel {
                 repaint();
             }
 
-            public void begin() {
+            @Override public void begin() {
             }
 
-            public void end() {
+            @Override public void end() {
             }
         }
     }
 
     private class ShowAlbumHandler implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
+        @Override public void actionPerformed(ActionEvent e) {
             final Photoset selectedAlbum = albumSelector.getSelectedAlbum();
             TransitionManager.showSlideshow(selectedAlbum.getOwner(), selectedAlbum);
         }
     }
     private static class ShowTripReportHandler implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
+        @Override public void actionPerformed(ActionEvent e) {
             TransitionManager.showTripReport();
         }
     }
     private static class ResumeTripReportHandler implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
+        @Override public void actionPerformed(ActionEvent e) {
             try {
-                Trip t = FileUtils.readTrip(new File("saved-trips"));
+                final Trip t = FileUtils.readTrip(new File("saved-trips"));
                 TransitionManager.showTripReport(t);
             } catch (Exception ex) {
                 ex.printStackTrace();
