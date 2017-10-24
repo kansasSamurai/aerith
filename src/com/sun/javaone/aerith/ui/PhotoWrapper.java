@@ -61,26 +61,36 @@ public class PhotoWrapper implements Runnable {
 
     @Override
     public void run() {
+        String url;
+
+        url = getFlickrPhoto().getSmallSquareUrl();
         try {
+            System.out.println("PhotoWrapper.run() > " + url);
             smallSquareImage = GraphicsUtil.toCompatibleImage(getFlickrPhoto().getSmallSquareImage());
             smallSquareImageLoaded = true;
             support.firePropertyChange("smallSquareImageLoaded", false, true);
         } catch (IOException ex) {
+            System.out.println("PhotoWrapper  ex   > " + url);
             ex.printStackTrace();
         } catch (Exception ex) {
+            System.out.println("PhotoWrapper  ex   > " + url);
             ex.printStackTrace();
         }
 
         final BufferedImage scaled = GraphicsUtil.createThumbnail(smallSquareImage, ICONSIZE_2);
         icon = new ImageIcon(scaled);
 
+        url = getFlickrPhoto().getSmallUrl();
         try {
+            System.out.println("PhotoWrapper.run() > " + url);
             image = GraphicsUtil.toCompatibleImage(getFlickrPhoto().getSmallImage());
             imageLoaded = true;
             support.firePropertyChange("imageLoaded", false, true);
         } catch (IOException ex) {
+            System.out.println("PhotoWrapper  ex   > " + url);
             ex.printStackTrace();
         } catch (Exception ex) {
+            System.out.println("PhotoWrapper  ex   > " + url);
             ex.printStackTrace();
         }
 

@@ -47,119 +47,117 @@ import com.sun.javaone.aerith.ui.PhotoWrapper;
 import com.sun.javaone.aerith.ui.music.MusicPlayer;
 import com.sun.javaone.aerith.util.FileUtils;
 
+/**
+ * IndyFullScreenRenderer
+ *
+ * @author Rick Wellman
+ * @author aerith
+ */
 public class IndyFullScreenRenderer implements FullScreenRenderer {
-	private final BufferedImage image;
 
-	private boolean isDone = false;
+    private final BufferedImage image;
 
-	private float zoomLevel = 1.0f;
+    private boolean isDone = false;
 
-	private float opacity = 1.0f;
+    private float zoomLevel = 1.0f;
 
-	private boolean screenWentAway = false;
+    private float opacity = 1.0f;
 
-	private Point2D[] points;
+    private boolean screenWentAway = false;
 
-	private IndyPanel indyMapPanel;
+    private Point2D[] points;
 
-	private MPAAPanel mpaaPanel;
+    private IndyPanel indyMapPanel;
 
-	private double[] lengths;
+    private MPAAPanel mpaaPanel;
 
-	private MusicPlayer player;
+    private double[] lengths;
 
-	private Animator mapTimer;
+    private MusicPlayer player;
 
-	private Animator photoTimer;
+    private Animator mapTimer;
 
-	private Animator introductionTimer;
+    private Animator photoTimer;
 
-	private Animator mpaaTimer;
+    private Animator introductionTimer;
 
-	private Thread loadingThread;
+    private Animator mpaaTimer;
 
-	private List<BufferedImage> photos;
+    private Thread loadingThread;
 
-	private boolean introPassed = false;
+    private List<BufferedImage> photos;
 
-	private boolean paintMap = false;
+    private boolean introPassed = false;
 
-	private int photosCount = 0;
+    private boolean paintMap = false;
 
-	private int photosLoaded = 0;
+    private int photosCount = 0;
 
-	private boolean paintMPAA = false;
+    private int photosLoaded = 0;
 
-	private URL baseUrl;
+    private boolean paintMPAA = false;
 
-	IndyFullScreenRenderer(BufferedImage image, URL baseUrl) {
-		BufferedImage mask = createGradientMask(image.getWidth(), image
-				.getHeight());
-		this.image = createReflectedPicture(image, mask);
-		this.baseUrl = baseUrl;
-	}
+    private URL baseUrl;
 
-	public static BufferedImage createReflectedPicture(BufferedImage avatar,
-			BufferedImage alphaMask) {
-		int avatarWidth = avatar.getWidth();
-		int avatarHeight = avatar.getHeight();
+    IndyFullScreenRenderer(BufferedImage image, URL baseUrl) {
+            BufferedImage mask = createGradientMask(image.getWidth(), image.getHeight());
+            this.image = createReflectedPicture(image, mask);
+            this.baseUrl = baseUrl;
+    }
 
-		BufferedImage buffer = createReflection(avatar, avatarWidth,
-				avatarHeight);
+    public static BufferedImage createReflectedPicture(BufferedImage avatar, BufferedImage alphaMask) {
+            int avatarWidth = avatar.getWidth();
+            int avatarHeight = avatar.getHeight();
 
-		applyAlphaMask(buffer, alphaMask, avatarHeight);
+            BufferedImage buffer = createReflection(avatar, avatarWidth, avatarHeight);
+            applyAlphaMask(buffer, alphaMask, avatarHeight);
 
-		return buffer;
-	}
+            return buffer;
+    }
 
-	private static void applyAlphaMask(BufferedImage buffer,
-			BufferedImage alphaMask, int avatarHeight) {
+    private static void applyAlphaMask(BufferedImage buffer, BufferedImage alphaMask, int avatarHeight) {
+            Graphics2D g2 = buffer.createGraphics();
+            g2.setComposite(AlphaComposite.DstOut);
+            g2.drawImage(alphaMask, null, 0, avatarHeight);
+            g2.dispose();
+    }
 
-		Graphics2D g2 = buffer.createGraphics();
-		g2.setComposite(AlphaComposite.DstOut);
-		g2.drawImage(alphaMask, null, 0, avatarHeight);
-		g2.dispose();
-	}
+    private static BufferedImage createReflection(BufferedImage avatar, int avatarWidth, int avatarHeight) {
+        final BufferedImage buffer = GraphicsUtil.createTranslucentCompatibleImage(avatarWidth, avatarHeight * 2);
 
-	private static BufferedImage createReflection(BufferedImage avatar,
-			int avatarWidth, int avatarHeight) {
+        final Graphics2D g = buffer.createGraphics();
+        g.drawImage(avatar, null, null);
+        g.translate(0, avatarHeight * 2);
 
-		BufferedImage buffer = GraphicsUtil.createTranslucentCompatibleImage(
-				avatarWidth, avatarHeight * 2);
-		Graphics2D g = buffer.createGraphics();
+        AffineTransform reflectTransform = AffineTransform.getScaleInstance( 1.0, -1.0);
+        g.drawImage(avatar, reflectTransform, null);
 
-		g.drawImage(avatar, null, null);
-		g.translate(0, avatarHeight * 2);
+        g.dispose();
 
-		AffineTransform reflectTransform = AffineTransform.getScaleInstance(
-				1.0, -1.0);
-		g.drawImage(avatar, reflectTransform, null);
+        return buffer;
+    }
 
-		g.dispose();
+    private static BufferedImage createGradientMask(int avatarWidth, int avatarHeight) {
+        final BufferedImage gradient = GraphicsUtil.createTranslucentCompatibleImage( avatarWidth, avatarHeight);
 
-		return buffer;
-	}
+        final Graphics2D g = gradient.createGraphics();
+        GradientPaint painter = new GradientPaint(0.0f, 0.0f, new Color(1.0f,
+                        1.0f, 1.0f, 0.55f), 0.0f, avatarHeight * 4.0f / 5.0f,
+                        new Color(1.0f, 1.0f, 1.0f, 1.0f));
+        g.setPaint(painter);
+        g.fill(new Rectangle2D.Double(0, 0, avatarWidth, avatarHeight));
 
-	private static BufferedImage createGradientMask(int avatarWidth,
-			int avatarHeight) {
-		BufferedImage gradient = GraphicsUtil.createTranslucentCompatibleImage(
-				avatarWidth, avatarHeight);
-		Graphics2D g = gradient.createGraphics();
-		GradientPaint painter = new GradientPaint(0.0f, 0.0f, new Color(1.0f,
-				1.0f, 1.0f, 0.55f), 0.0f, avatarHeight * 4.0f / 5.0f,
-				new Color(1.0f, 1.0f, 1.0f, 1.0f));
-		g.setPaint(painter);
-		g.fill(new Rectangle2D.Double(0, 0, avatarWidth, avatarHeight));
+        g.dispose();
 
-		g.dispose();
+        return gradient;
+    }
 
-		return gradient;
-	}
+    @Override
+    public boolean isDone() {
+            return isDone;
+    }
 
-	public boolean isDone() {
-		return isDone;
-	}
-
+    @Override
 	public void render(Graphics g, Rectangle bounds) {
 		Graphics2D g2 = (Graphics2D) g;
 		setupGraphics(g2);
@@ -229,38 +227,36 @@ public class IndyFullScreenRenderer implements FullScreenRenderer {
 		}
 	}
 
-	public void cancel() {
-		if (!introPassed) {
-			return;
-		}
+    @Override
+    public void cancel() {
+        if (!introPassed) {
+            return;
+        }
 
-		if (photoTimer != null) {
-			photoTimer.stop();
-		}
+        if (photoTimer != null) {
+            photoTimer.stop();
+        }
 
-		if (mapTimer != null) {
-			mapTimer.stop();
-		}
-	}
+        if (mapTimer != null) {
+            mapTimer.stop();
+        }
+    }
 
-	private static void setupGraphics(Graphics2D g2) {
-		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-	}
+    private static void setupGraphics(Graphics2D g2) {
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+    }
 
-	private void paintSystemScreen(Graphics2D g2, Rectangle bounds) {
-		int width = (int) (image.getWidth() * zoomLevel);
-		int height = (int) (image.getHeight() * zoomLevel);
-		Composite composite = g2.getComposite();
-		g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
-				opacity));
-		g2
-				.drawImage(image, (bounds.width - width) / 2,
-						(int) (-(height / 7) * (1.0f - zoomLevel)), width,
-						height, null);
+    private void paintSystemScreen(Graphics2D g2, Rectangle bounds) {
+        int width = (int) (image.getWidth() * zoomLevel);
+        int height = (int) (image.getHeight() * zoomLevel);
+        final Composite composite = g2.getComposite();
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+        g2.drawImage(image, (bounds.width - width) / 2,
+                                        (int) (-(height / 7) * (1.0f - zoomLevel)), width,
+                                        height, null);
 
-		g2.setComposite(composite);
-	}
+        g2.setComposite(composite);
+    }
 
 	private static void paintBackground(Graphics2D g2, Rectangle bounds) {
 		// if (gradientBuffer == null) {
@@ -301,186 +297,180 @@ public class IndyFullScreenRenderer implements FullScreenRenderer {
 		return opacity;
 	}
 
-	public void start() {
-		loadingThread = new Thread("Loading Thread") {
-			@Override
-			public void run() {
-				Trip t = null;
-				try {
-					t = FileUtils.readTrip(new File(new URL(baseUrl
-							.toExternalForm()
-							+ "saved-trips/").toURI()));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+    @Override
+    public void start() {
+        loadingThread = new Thread("Loading Thread") {
+            @Override
+            public void run() {
+                Trip t = null;
+                try {
+                    t = FileUtils.readTrip(new File(new URL(baseUrl.toExternalForm() + "saved-trips/").toURI()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-				BufferedImage timg = null;
-				try {
-					timg = ImageIO.read(new File(new URL(baseUrl
-							.toExternalForm()
-							+ "indy-map.jpg").toURI()));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+                BufferedImage timg = null;
+                try {
+                    timg = ImageIO.read(new File(new URL(baseUrl.toExternalForm() + "resources/slideshow.png").toURI()));
+                            // + "indy-map.jpg").toURI()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-				if (t == null || timg == null) {
-					assert false;
-				}
+                if (t == null || timg == null) {
+                    assert false;
+                }
 
-				BufferedImage img = GraphicsUtil.toCompatibleImage(timg);
-				timg.flush();
-				// noinspection UnusedAssignment
-				timg = null;
+                final BufferedImage img = GraphicsUtil.toCompatibleImage(timg);
+                if (timg != null) {
+                    timg.flush();
+                    // noinspection UnusedAssignment
+                    timg = null;
+                }
 
-				boolean useLargePicture = System
-						.getProperty("athena.largePictures") != null;
-				photosCount = 0;
-				for (Trip.Waypoint wp : t.getWaypoints()) {
-					photosCount += wp.getPhotoCount();
-				}
+                boolean useLargePicture = System.getProperty("athena.largePictures") != null;
+                photosCount = 0;
+                for (Trip.Waypoint wp : t.getWaypoints()) {
+                    photosCount += wp.getPhotoCount();
+                }
 
-				photos = new ArrayList<BufferedImage>(photosCount);
-				for (Trip.Waypoint wp : t.getWaypoints()) {
-					for (PhotoWrapper wrapper : wp.getPhotos()) {
-						final Photo photo = wrapper.getFlickrPhoto();
-						try {
-							photos.add(GraphicsUtil
-									.loadCompatibleImage(new URL(
-											useLargePicture ? photo
-													.getLargeUrl() : photo
-													.getMediumUrl())));
-						} catch (MalformedURLException ex) {
-							ex.printStackTrace();
-						} catch (IOException ex) {
-							ex.printStackTrace();
-						} finally {
-							photosLoaded++;
-						}
-					}
-				}
-				indyMapPanel = new IndyPanel(img, photos
-						.toArray(new BufferedImage[0]));
-				JXMapViewer map = new JXMapViewer();
-				GeneralPath path = TileGrabber.getScaledPath(t.getPath(), map
-						.getTileFactory(), 8);
-				points = TileGrabber.getPathPoints(path);
-				TileGrabber.adjustPathPoints(points, map.getTileFactory());
-				lengths = calculatePathLengths(points);
-			}
-		};
-		// loadingThread.setPriority(Thread.MIN_PRIORITY);
-		loadingThread.start();
+                photos = new ArrayList<BufferedImage>(photosCount);
+                for (Trip.Waypoint wp : t.getWaypoints()) {
+                    for (PhotoWrapper wrapper : wp.getPhotos()) {
+                        final Photo photo = wrapper.getFlickrPhoto();
+                        try {
+                            photos.add(GraphicsUtil.loadCompatibleImage(
+                                    new URL( useLargePicture ? photo.getLargeUrl() : photo .getMediumUrl())));
+                        } catch (MalformedURLException ex) {
+                            ex.printStackTrace();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        } finally {
+                            photosLoaded++;
+                        }
+                    }
+                }
+                indyMapPanel = new IndyPanel(img, photos.toArray(new BufferedImage[0]));
+                JXMapViewer map = new JXMapViewer();
+                GeneralPath path = TileGrabber.getScaledPath(t.getPath(), map.getTileFactory(), 8);
+                points = TileGrabber.getPathPoints(path);
+                TileGrabber.adjustPathPoints(points, map.getTileFactory());
+                lengths = calculatePathLengths(points);
+            }
+        };
+        loadingThread.start();
 
-		mpaaPanel = new MPAAPanel();
+        mpaaPanel = new MPAAPanel();
 
-		try {
-			player = MusicPlayer.getMusicPlayer(new File(new URL(baseUrl
-					.toExternalForm()
-					+ "music/theme.mp3").toURI()).getAbsolutePath());
-		} catch (MalformedURLException ex) {
-			ex.printStackTrace();
-		} catch (URISyntaxException ex) {
-			ex.printStackTrace();
-		}
-		startIntro();
-	}
+        try {
+            player = MusicPlayer.getMusicPlayer(new File(
+                    new URL(baseUrl.toExternalForm() + "music/theme.mp3").toURI()).getAbsolutePath());
+        } catch (MalformedURLException ex) {
+            ex.printStackTrace();
+        } catch (URISyntaxException ex) {
+            ex.printStackTrace();
+        }
+        startIntro();
+    }
 
-	private void startIntro() {
+    private void startIntro() {
 
-		introductionTimer = PropertySetter.createAnimator(2000, this,
-				"zoomLevel", 1.0f, 0.25f);
-		PropertySetter ps = new PropertySetter(this, "opacity", 1.0f, 0.0f);
-		introductionTimer.addTarget(ps);
-		introductionTimer.setAcceleration(0.7f);
-		introductionTimer.addTarget(new TimingTarget() {
+        PropertySetter ps = new PropertySetter(this, "opacity", 1.0f, 0.0f);
+        introductionTimer = PropertySetter.createAnimator(2000, this, "zoomLevel", 1.0f, 0.25f);
+        introductionTimer.addTarget(ps);
+        introductionTimer.setAcceleration(0.7f);
+        introductionTimer.addTarget(new TimingTarget() {
 
-			public void begin() {
-				paintMPAA = true;
+            @Override
+            public void begin() {
+                paintMPAA = true;
+            }
 
-			}
+            @Override
+            public void end() {
+                screenWentAway = true;
+                startMPAATimer();
+            }
 
-			public void end() {
-				screenWentAway = true;
-				startMPAATimer();
-			}
+            @Override
+            public void repeat() {
+                // TODO Auto-generated method stub
+            }
 
-			public void repeat() {
-				// TODO Auto-generated method stub
+            @Override
+            public void timingEvent(float arg0) {
+                // TODO Auto-generated method stub
+            }
+        });
+        introductionTimer.start();
+    }
 
-			}
+    private void startMPAATimer() {
+        mpaaTimer = PropertySetter.createAnimator(1000, mpaaPanel, "alpha", 0.0f, 1.0f);
+        mpaaTimer.setAcceleration(.2f);
+        mpaaTimer.addTarget(new TimingTarget() {
 
-			public void timingEvent(float arg0) {
-				// TODO Auto-generated method stub
+            @Override
+            public void begin() {
+                // TODO Auto-generated method stub
+            }
 
-			}
-		});
-		introductionTimer.start();
-	}
+            @Override
+            public void end() {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            loadingThread.join();
+                        } catch (InterruptedException e1) {
+                            e1.printStackTrace();
+                        }
+                        new Thread(new Runnable() {
+                            @Override public void run() {
+                                try {
+                                    player.play();
+                                } catch (JavaLayerException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }, "Music Theme").start();
+                        indyMapPanel.setOffset(points[0]);
+                        paintMap = true;
 
-	private void startMPAATimer() {
-		mpaaTimer = PropertySetter.createAnimator(1000, mpaaPanel, "alpha",
-				0.0f, 1.0f);
-		mpaaTimer.setAcceleration(.2f);
-		mpaaTimer.addTarget(new TimingTarget() {
+                        startMPAATimer2();
+                    }
+                }, "Pictures Join Point").start();
 
-			public void begin() {
-				// TODO Auto-generated method stub
+            }
 
-			}
+            @Override
+            public void repeat() {
+            }
 
-			public void end() {
-				new Thread(new Runnable() {
-					public void run() {
-						try {
-							loadingThread.join();
-						} catch (InterruptedException e1) {
-							e1.printStackTrace();
-						}
-						new Thread(new Runnable() {
-							public void run() {
-								try {
-									player.play();
-								} catch (JavaLayerException e) {
-									e.printStackTrace();
-								}
-							}
-						}, "Music Theme").start();
-						indyMapPanel.setOffset(points[0]);
-						paintMap = true;
-
-						startMPAATimer2();
-					}
-				}, "Pictures Join Point").start();
-
-			}
-
-			public void repeat() {
-			}
-
-			public void timingEvent(float arg0) {
-			}
-		});
-		mpaaTimer.start();
-	}
+            @Override
+            public void timingEvent(float arg0) {
+            }
+        });
+        mpaaTimer.start();
+    }
 
 	private void startMPAATimer2() {
-		mpaaTimer = PropertySetter.createAnimator(1000, mpaaPanel, "alpha",
-				1.0f, 0.0f);
+		mpaaTimer = PropertySetter.createAnimator(1000, mpaaPanel, "alpha", 1.0f, 0.0f);
 		mpaaTimer.setAcceleration(.2f);
 		mpaaTimer.addTarget(new TimingTarget() {
 
-			public void begin() {
+			@Override public void begin() {
 			}
 
-			public void end() {
+			@Override public void end() {
 				startMapTimer();
 				paintMPAA = false;
 			}
 
-			public void repeat() {
+			@Override public void repeat() {
 			}
 
-			public void timingEvent(float arg0) {
+			@Override public void timingEvent(float arg0) {
 			}
 		});
 		mpaaTimer.start();
@@ -488,21 +478,20 @@ public class IndyFullScreenRenderer implements FullScreenRenderer {
 
 	private void startMapTimer() {
 		KeyValues<Point2D> values = KeyValues.create(points);
-		mapTimer = PropertySetter.createAnimator(287000, indyMapPanel,
-				"offset", new KeyFrames(values, calculateKeyTimes(lengths)));
+		mapTimer = PropertySetter.createAnimator(287000, indyMapPanel, "offset", new KeyFrames(values, calculateKeyTimes(lengths)));
 		mapTimer.addTarget(new TimingTarget() {
-			public void begin() {
+			@Override public void begin() {
 			}
 
-			public void end() {
+			@Override public void end() {
 				player.stop();
 				startOutro();
 			}
 
-			public void repeat() {
+			@Override public void repeat() {
 			}
 
-			public void timingEvent(float arg0) {
+			@Override public void timingEvent(float arg0) {
 			}
 		});
 		mapTimer.start();
@@ -510,40 +499,30 @@ public class IndyFullScreenRenderer implements FullScreenRenderer {
 		// fade the image in, fade the image out. So, two cycles per image
 
 		// noinspection unchecked
-		KeyValues<Float> alphaValues = KeyValues.create(new Float[] { .5f, .5f,
-				0.0f });
+		KeyValues<Float> alphaValues = KeyValues.create(new Float[] { .5f, .5f, 0.0f });
 		SplineInterpolator splineInterpolator[] = {
 				new SplineInterpolator(1, 0, 1, 0),
 				new SplineInterpolator(1, 0, 1, 0) };
-		KeyFrames keyFrames = new KeyFrames(alphaValues, new KeyTimes(0, 0.7f,
-				1), splineInterpolator);
-		Animator photoTimer = PropertySetter.createAnimator(287000 / photos
-				.size(), indyMapPanel, "currentPhotoAlpha", keyFrames);
+		KeyFrames keyFrames = new KeyFrames(alphaValues, new KeyTimes(0, 0.7f, 1), splineInterpolator);
+		Animator photoTimer = PropertySetter.createAnimator(287000 / photos.size(), indyMapPanel, "currentPhotoAlpha", keyFrames);
 		photoTimer.setRepeatCount(photos.size());
 		photoTimer.setRepeatBehavior(RepeatBehavior.LOOP);
 		photoTimer.setResolution(30);
 		photoTimer.addTarget(new TimingTarget() {
-			public void begin() {
-				introPassed = true;
-				// TODO Auto-generated method stub
+			@Override public void begin() {
+                            introPassed = true;
+                        }
 
+			@Override public void end() {
+				// TODO Auto-generated method stub
 			}
 
-			public void end() {
-				// TODO Auto-generated method stub
-
+			@Override public void repeat() {
+				indyMapPanel.setCurrentPhoto(indyMapPanel.getCurrentPhoto() + 1);
 			}
 
-			public void repeat() {
-				indyMapPanel
-						.setCurrentPhoto(indyMapPanel.getCurrentPhoto() + 1);
+			@Override public void timingEvent(float arg0) {
 				// TODO Auto-generated method stub
-
-			}
-
-			public void timingEvent(float arg0) {
-				// TODO Auto-generated method stub
-
 			}
 		});
 		photoTimer.start();
@@ -554,21 +533,18 @@ public class IndyFullScreenRenderer implements FullScreenRenderer {
 		KeyTimes times = new KeyTimes(0.0f, 1.0f);
 		KeyFrames frames = new KeyFrames(vals, times);
 
-		Animator timer = PropertySetter.createAnimator(2000, this, "zoomLevel",
-				frames);
+		Animator timer = PropertySetter.createAnimator(2000, this, "zoomLevel", frames);
 		timer.setResolution(12);
 		timer.setAcceleration(0.7f);
 
-		PropertySetter opacityTarget = new PropertySetter(this, "opacity",
-				frames);
+		PropertySetter opacityTarget = new PropertySetter(this, "opacity", frames);
 		timer.addTarget(opacityTarget);
-
 		timer.addTarget(new TimingTarget() {
-			public void begin() {
+			@Override public void begin() {
 				screenWentAway = false;
 			}
 
-			public void end() {
+			@Override public void end() {
 				new Thread(new Runnable() {
 					public void run() {
 						try {
@@ -582,14 +558,12 @@ public class IndyFullScreenRenderer implements FullScreenRenderer {
 				}, "Outro End").start();
 			}
 
-			public void repeat() {
+			@Override public void repeat() {
 				// TODO Auto-generated method stub
-
 			}
 
-			public void timingEvent(float arg0) {
+			@Override public void timingEvent(float arg0) {
 				// TODO Auto-generated method stub
-
 			}
 		});
 		timer.start();
@@ -621,7 +595,7 @@ public class IndyFullScreenRenderer implements FullScreenRenderer {
 		return new KeyTimes(times);
 	}
 
-	public void end() {
+	@Override public void end() {
 		if (!player.isComplete()) {
 			player.stop();
 		}

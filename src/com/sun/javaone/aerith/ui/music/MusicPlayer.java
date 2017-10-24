@@ -148,6 +148,7 @@ public class MusicPlayer {
      * Decodes a single frame.
      *
      * @return true if there are no more frames to decode, false otherwise.
+     * @throws javazoom.jl.decoder.JavaLayerException
      *
      * @noinspection BooleanMethodNameMustStartWithQuestion
      */

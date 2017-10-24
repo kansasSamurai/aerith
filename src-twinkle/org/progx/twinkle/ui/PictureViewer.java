@@ -313,13 +313,14 @@ public class PictureViewer extends CompositeGLPanel {
     }
 
     private void showPicture(final boolean next) {
-        System.out.println("showPicture() > " + next);
+        System.out.println("showPicture(), next             > " + next);
 
         if (animator != null && animator.isRunning()) {
             System.out.println("WARN: Animator is running");
             return;
         }
 
+        System.out.println("showPicture(), pictureIsShowing > " +pictureIsShowing);
         if (pictureIsShowing) {
             new Thread(new Runnable() {
                 /** @noinspection BusyWait*/
@@ -354,7 +355,7 @@ public class PictureViewer extends CompositeGLPanel {
             return;
         }
 
-        animator = new Timer(1000 / 60, new SlideAnimation(next)); // 10 := original value
+        animator = new Timer(2, new SlideAnimation(next)); // 10 := original value
         animator.start();
     }
 
@@ -500,9 +501,9 @@ public class PictureViewer extends CompositeGLPanel {
 
     @Override
     protected void render3DScene(final GL gl, final GLU glu) {
-        System.out.println("render3DScene()");
+        //System.out.println("render3DScene()");
         if (stopRendering) {
-            System.out.println("render3DScene(), stopRendering");
+            //System.out.println("render3DScene(), stopRendering");
             initAndDisposeQuads(gl);
             return;
         }
@@ -540,7 +541,7 @@ public class PictureViewer extends CompositeGLPanel {
     }
 
     private void initAndDisposeQuads(final GL gl) {
-        System.out.println("initAndDisposeQuads()");
+        //System.out.println("initAndDisposeQuads()");
 
         while (!initQuadsQueue.isEmpty()) {
             final Renderable quad = initQuadsQueue.poll();
@@ -558,7 +559,7 @@ public class PictureViewer extends CompositeGLPanel {
     }
 
     private static void initScene(GL gl) {
-        System.out.println("initScene()");
+        //System.out.println("initScene()");
         // [1] gl.glMatrixMode(GL.GL_MODELVIEW));
         // [1] gl.glLoadIdentity();
         gl.getGL2().glMatrixMode(GL2.GL_MODELVIEW);
@@ -652,6 +653,7 @@ public class PictureViewer extends CompositeGLPanel {
 
         private static final int ANIM_DELAY = 800 * 10;
 
+        // If true, animate to the next pic.  If false, animate to the prev pic.
         private final boolean next;
 
         private final long start;
@@ -660,24 +662,29 @@ public class PictureViewer extends CompositeGLPanel {
             this.next = next;
             this.start =  System.currentTimeMillis();
 
-            if (next) {
-                if (idxNextPicture < pictures.size()) {
-                    nextTextImage = generateTextImage(pictures.get(idxNextPicture));
-                } else {
-                    nextTextImage = null;
-                }
-            } else {
-                if (idxSelectedPicture > 0) {
-                    nextTextImage = generateTextImage(pictures.get(idxSelectedPicture - 1));
-                } else {
-                    nextTextImage = null;
-                }
-            }
+            final int idxToShow = next ? idxNextPicture : (idxSelectedPicture - 1);
+            final boolean discriminator = next
+                    ? (idxNextPicture < pictures.size())
+                    : (idxSelectedPicture > 0);
+            nextTextImage =  discriminator ? generateTextImage(pictures.get(idxToShow)) : null;
+// Replaced this logic with the logic above
+//            if (next) {
+//                if (idxNextPicture < pictures.size()) {
+//                    nextTextImage = generateTextImage(pictures.get(idxNextPicture));
+//                } else {
+//                    nextTextImage = null;
+//                }
+//            } else {
+//                if (idxSelectedPicture > 0) {
+//                    nextTextImage = generateTextImage(pictures.get(idxSelectedPicture - 1));
+//                } else {
+//                    nextTextImage = null;
+//                }
+//            }
         }
 
         @Override public void actionPerformed(ActionEvent e) {
             long elapsed = System.currentTimeMillis() - start;
-            System.out.println("SlideAnimation");
 
             if (elapsed >= ANIM_DELAY) {
                 final Timer timer = (Timer) e.getSource();
@@ -716,7 +723,7 @@ public class PictureViewer extends CompositeGLPanel {
         }
 
         private void animateQuadsNext(double factor) {
-            System.out.println("AQN > " + Double.toString(factor));
+            // System.out.println("AQN > " + Double.toString(factor));
 
             Renderable quad;
             Point3f position;
@@ -744,7 +751,7 @@ public class PictureViewer extends CompositeGLPanel {
         }
 
         private void animateQuadsPrevious(double factor) {
-            System.out.println("AQP > " + Double.toString(factor));
+            // System.out.println("AQP > " + Double.toString(factor));
 
             final float scale = 0.5f + 0.5f * (float) factor;
 

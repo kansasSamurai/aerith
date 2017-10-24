@@ -36,14 +36,16 @@ import org.jdesktop.fuse.ResourceInjector;
 import org.jdesktop.swingx.mapviewer.LocalResponseCache;
 
 /**
+ * TripReportPanel
  *
+ * @author Rick Wellman
  * @author aerith
  */
 class TripReportPanel extends JPanel {
 
     private Trip trip;
 
-    private TripEditPanel editPanel;
+    private final TripEditPanel editPanel;
 
     ////////////////////////////////////////////////////////////////////////////
     // THEME SPECIFIC FIELDS
@@ -53,28 +55,31 @@ class TripReportPanel extends JPanel {
     @InjectedResource
     private Color websiteBackground;
 
-    TripReportPanel() {
+    public TripReportPanel() {
         ResourceInjector.get().inject(this);
+
         setOpaque(false);
         setLayout(new BorderLayout());
 
+        // Create buttons
         ActionButton previewButton = new ActionButton(new PreviewAction());
         ActionButton publishButton = new ActionButton(new PublishAction());
+        ActionButton saveTripButton = new ActionButton(new SaveTripAction());
         publishButton.setMain(true);
 
+        // Create button panel
         JPanel buttonPanel = new JPanel();
         buttonPanel.setOpaque(false);
-        buttonPanel.add(new ActionButton(new SaveTripAction()));
+        buttonPanel.add(saveTripButton);
         buttonPanel.add(previewButton);
         buttonPanel.add(publishButton);
-//                try {
-//                    tripReportPanel.setTrip(FileUtils.readTrip(new File("./")));
-//                } catch (Exception ex) {
-//                    ex.printStackTrace();
-//                }
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-        add(BorderLayout.SOUTH, buttonPanel);
+
+        // Create trip edit panel
         editPanel = new TripEditPanel();
+
+        // Add components to this panel via border layout
+        add(BorderLayout.SOUTH, buttonPanel);
         add(BorderLayout.CENTER, new RoundedPanel(editPanel));
         add(BorderLayout.WEST, Box.createHorizontalStrut(20));
         add(BorderLayout.NORTH, Box.createVerticalStrut(20));
@@ -88,12 +93,9 @@ class TripReportPanel extends JPanel {
     public void setTrip(Trip t) {
         if (t == null) {
             final Trip varTrip = new Trip();
-//            Runnable r = new Runnable() {
-//                public void run() {
-        ///////////////FOR TESTING -- must be removed soon
-                    varTrip.setName("My Trip Name");
-                    varTrip.setSummary("My Trip Summary");
-                    varTrip.setTitle("My Trip Title");
+            varTrip.setName("My Trip Name");
+            varTrip.setSummary("My Trip Summary");
+            varTrip.setTitle("My Trip Title");
 
 // FOR TRIP RECONSTRUCTION PURPOSE
 //            Trip myTrip = null;
@@ -113,6 +115,7 @@ class TripReportPanel extends JPanel {
         ///////////////END OF TESTING
 
                     try {
+                        // TODO develop a way to specify a different album
                         final PhotosetsInterface photosetsInterface = FlickrService.getPhotosetsInterface();
                         final PhotoList photos = photosetsInterface.getPhotos("72057594067354711",10,1);
                         for (Object obj : photos) {
@@ -125,10 +128,7 @@ class TripReportPanel extends JPanel {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-//                }
-//            };
             t = varTrip;
-//            new Thread(r).start();
         }
         this.trip = t;
         if (editPanel != null) {
@@ -137,6 +137,7 @@ class TripReportPanel extends JPanel {
     }
 
     private static class RoundedPanel extends JPanel {
+
         private BufferedImage cache;
 
         public RoundedPanel(JComponent component) {
@@ -168,11 +169,12 @@ class TripReportPanel extends JPanel {
         }
     }
 
+    /** Action for saving the trip to a new file */
     private final class SaveTripAction extends AbstractAction {
         private SaveTripAction() {
             super("Save");
         }
-        public void actionPerformed(ActionEvent evt) {
+        @Override public void actionPerformed(ActionEvent evt) {
             try {
                 FileUtils.saveTrip(new File("saved-trips"), trip);
             } catch (Exception ex) {
@@ -181,9 +183,7 @@ class TripReportPanel extends JPanel {
         }
     }
 
-    /**
-     * Action for previewing the planned trip in the browser
-     */
+    /** Action for previewing the planned trip in the browser */
     private final class PreviewAction extends AbstractAction {
         private PreviewAction() {
             super("Preview");
@@ -200,9 +200,7 @@ class TripReportPanel extends JPanel {
         }
     }
 
-    /**
-     *
-     */
+    /** Action for creating an HTML version of the trip and viewing in a browser */
     private final class PublishAction extends AbstractAction {
         private PublishAction() {
             super("Publish");
@@ -251,7 +249,7 @@ class TripReportPanel extends JPanel {
     }
 
     public Map<String,String> prepareDeploymentVariables() {
-        Map<String,String> variables = new HashMap<String,String>();
+        final Map<String,String> variables = new HashMap<String,String>();
         variables.put("TripReportTitle", "Freakin' Awesome US Tour");
         variables.put("BackgroundColor", GraphicsUtil.getColorHexString(websiteBackground));
         return variables;

@@ -21,21 +21,25 @@ import javax.swing.JFrame;
 import com.sun.javaone.aerith.g2d.GraphicsUtil;
 import org.jdesktop.swingx.mapviewer.LocalResponseCache;
 
+/**
+ *
+ * @author Rick Wellman
+ * @author aerith
+ */
 public class FullScreenManager {
-    private final FullScreenRenderer renderer;
+
     private BufferStrategy strategy;
     private Frame frame;
     private FullScreenManager.EscapeKeyListener escapeListener;
+    private final FullScreenRenderer renderer;
 
     public FullScreenManager(FullScreenRenderer renderer) {
         this.renderer = renderer;
     }
 
     public void enterFullScreen() {
-        GraphicsEnvironment environment = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        GraphicsDevice device = environment.getDefaultScreenDevice();
-
-//        DisplayMode displayMode = device.getDisplayMode();
+        final GraphicsEnvironment environment = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        final GraphicsDevice device = environment.getDefaultScreenDevice();
 
         try {
             frame = new JFrame();
@@ -43,10 +47,6 @@ public class FullScreenManager {
             frame.setIgnoreRepaint(true);
 
             device.setFullScreenWindow(frame);
-//            if (device.isDisplayChangeSupported()) {
-//                device.setDisplayMode(new DisplayMode(800, 500, 32,
-//                                                      DisplayMode.REFRESH_RATE_UNKNOWN));
-//            }
 
             frame.setBackground(Color.BLACK);
             frame.createBufferStrategy(2);
@@ -55,7 +55,6 @@ public class FullScreenManager {
             run();
         } finally {
             device.setFullScreenWindow(null);
-//            device.setDisplayMode(displayMode);
         }
     }
 
@@ -89,20 +88,20 @@ public class FullScreenManager {
 
     private void setupEscapeKey() {
         escapeListener = new EscapeKeyListener();
-        Toolkit.getDefaultToolkit().addAWTEventListener(escapeListener,
-                                                        KeyEvent.KEY_EVENT_MASK);
+        Toolkit.getDefaultToolkit().addAWTEventListener(escapeListener, KeyEvent.KEY_EVENT_MASK);
     }
 
+    // Cancel when the ESC key is pressed.
     private class EscapeKeyListener implements AWTEventListener {
-        public void eventDispatched(AWTEvent event) {
-            KeyEvent keyEvent = (KeyEvent) event;
-            if (keyEvent.getID() == KeyEvent.KEY_RELEASED &&
-                    keyEvent.getKeyCode() == KeyEvent.VK_ESCAPE) {
+        @Override public void eventDispatched(AWTEvent event) {
+            final KeyEvent keyEvent = (KeyEvent) event;
+            if (keyEvent.getID() == KeyEvent.KEY_RELEASED
+                    && keyEvent.getKeyCode() == KeyEvent.VK_ESCAPE) {
                 renderer.cancel();
             }
         }
     }
-    
+
     public static void launch(URL baseDir) throws Exception {
         LocalResponseCache.installResponseCache();
 
@@ -111,15 +110,14 @@ public class FullScreenManager {
         DisplayMode displayMode = device.getDisplayMode();
         BufferedImage image;
 
-        Robot robot = new Robot();
-        image = robot.createScreenCapture(
-            new Rectangle(0, 0, displayMode.getWidth(),
-                          displayMode.getHeight()));
+        final Rectangle rectDesktop = new Rectangle(0, 0, displayMode.getWidth(), displayMode.getHeight());
+
+        final Robot robot = new Robot();
+        image = robot.createScreenCapture(rectDesktop);
         image = GraphicsUtil.toCompatibleImage(image);
 
-        FullScreenRenderer renderer = new IndyFullScreenRenderer(image, baseDir);
-        FullScreenManager manager = new FullScreenManager(renderer);
-
+        final FullScreenRenderer renderer = new IndyFullScreenRenderer(image, baseDir);
+        final FullScreenManager manager = new FullScreenManager(renderer);
         manager.enterFullScreen();
     }
 
@@ -130,4 +128,5 @@ public class FullScreenManager {
             ex.printStackTrace();
         }
     }
+
 }
